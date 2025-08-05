@@ -1,0 +1,23 @@
+# Secret vars
+secret.yml
+
+# SSH keys or credentials
+*.pem
+*.key
+
+
+# Logs and temporary files
+*.log
+*.retry
+*.tmp
+
+# Ansible cache
+__pycache__/
+*.pyc
+*.pyo
+*.db
+
+# VSCode settings
+.vscode/
+
+.DS_Store/
