@@ -1,0 +1,39 @@
+########################################################################################
+# Schema Registry의 로그 설정 파일
+# Schema Registry가 어떤 로그를 어떻게 어디에 출력할 지 정하는 설정 파일
+########################################################################################
+
+# 로그 기본 레벨: INFO
+# 로그 출력 위치: 콘솔(stdout) + 파일(file)
+log4j.rootLogger=INFO, stdout, file
+# 콘솔 로그 출력기: ConsoleAppender
+# 터미널에 출력
+log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+# 로그 포멧: PatternLayout 형식으로 출력
+log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+# 로그 출력 포멧 설정: 
+#   %d(날짜), %p(로그 레벨), %m(메세지), %c(클래스), %L(라인 번호), %n(줄바꿈)
+log4j.appender.stdout.layout.ConversionPattern=[%d] %p %m (%c:%L)%n
+# 보통 ConsoleAppender는 파일로 안씀. 주석처리해도 무방함
+log4j.appender.stdout.File=${kafka.logs.dir}/schema-registry.log
+
+# 특정 패키지(kafka, zookeeper, org.apache.kafka)에 대해서는 로그 레벨을 ERROR로 제한
+# 즉 해당 패키지 로그는 에러 이상만 출력
+log4j.logger.kafka=ERROR, stdout
+log4j.logger.org.apache.zookeeper=ERROR, stdout
+log4j.logger.org.apache.kafka=ERROR, stdout
+
+# kafka.server 로거가 부모 로거에 로그를 전달하지 않도록 설정(중복 로그 방지용)
+log4j.additivity.kafka.server=false
+# 파일 출력기를 RollingFileAppender로 설정
+log4j.appender.file=org.apache.log4j.RollingFileAppender
+# 최대 10개의 백업 로그 파일을 유지
+log4j.appender.file.maxBackupIndex=10
+# 로그 파일이 100MB를 넘으면 롤링
+log4j.appender.file.maxFileSize=100MB
+# 로그 파일의 저장 경로
+log4j.appender.file.File=${schema-registry.log.dir}/schema-registry.log
+# 파일에 저장할로그 출력 포맷 설정
+# 클래스명만 포함하고 라인번호는 제외(%L이 없기 때문)
+log4j.appender.file.layout=org.apache.log4j.PatternLayout
+log4j.appender.file.layout.ConversionPattern=[%d] %p %m (%c)%n

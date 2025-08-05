@@ -1,0 +1,8 @@
+#!/bin/bash
+# CONFLUENT_HOME이라는 변수에 /engn/confluent라는 값 저장
+# 해당 값은 Confluent Platform이설치 된 디렉토리의 기변 경로
+CONFLUENT_HOME="/engn/confluent"
+# schema-registry-stop라는 실행파일을 실행
+# Schema Registry를 중지(stop)하는 명령어
+# 내부적으로는 PID 파일을 찾고 해당 프로세스를 종료 
+${CONFLUENT_HOME}/bin/schema-registry-stop

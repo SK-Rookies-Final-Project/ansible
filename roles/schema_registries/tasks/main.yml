@@ -1,0 +1,79 @@
+###################################################################################
+# 1. 설정 파일을 저장할 디렉토리 생성   /engn/confluent/properties 생성
+# 2. 메인 설정 파일 배포  /schema-registry.properties.j2->.properties 확장자로 변경
+# 3. 로그 설정 파일 배포  /schema-registry-log4j.properties.j2->.properties 확장자로 변경
+###################################################################################
+
+# 스키마 레지스트리의 properties 파일들을 저장할 디렉토리 생성
+# /engn/confluent/properties 디렉토리를 만들고 권한 설정
+- name: Create directory for properties files
+  file:
+    path: /engn/confluent/properties  # 디렉토리 경로
+    state: directory                  # 디렉토리 없으면 생성
+    owner: ubuntu                     # 소유자: ubuntu
+    group: ubuntu                     # 그룹: ubuntu
+    mode: '0755'                      # 권한: rwx r-x r-x
+    recurse: yes                      # 하위 디렉토리까지 포함해서 소유권/권한 적용
+
+# 스키마 레지스트리 메인 설정 파일 배포
+# Jinja2 템플릿을 /engn/confluent/properties 디렉토리에 .properties 확장자로 저장
+- name: Deploy schema-registry.properties.j2 to instance
+  template:
+    # 템플릿 소스(templates/ source 파일인 schema-registry.properties.j2)
+    src: schema-registry.properties.j2
+    # 실제 저장 경로 (확장자 .j2 제거됨)
+    dest: /engn/confluent/properties/schema-registry.properties
+    owner: ubuntu                     # 소유자: ubuntu
+    group: ubuntu                     # 그룹: ubuntu
+    mode: '0644'                      # 권한: rw- r-- r-- 
+
+# 스키마 레지스트리의 로그 설정 파일 배포
+- name: Deploy schema-registry-log4j.properties.j2 to instance
+  template:
+    # 템플릿 소스(templates/ source 파일인 schema-registry-log4j.properties.j2)
+    src: schema-registry-log4j.properties.j2
+    # 실제 저장 경로 (확장자 .j2 제거됨)
+    dest: /engn/confluent/properties/schema-registry-log4j.properties
+    owner: ubuntu                     # 소유자: ubuntu
+    group: ubuntu                     # 그룹: ubuntu
+    mode: '0644'                      # 권한: rw- r-- r--
+
+
+##################################################################################
+# 1. 디렉토리 만들고
+# 2. 시작 스크립트 파일 배포
+# 3. 종료 스크립트 파일 배포
+# 4. 마지막 start-schema-registry.sh 파일 실행 
+##################################################################################
+# 1. sh 파일을 저장할 디렉토리 생성
+- name: Create directory for scripts files
+  file:
+    path: /engn/confluent/scripts
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+    recurse: yes
+
+# 위에 했던 대로 .sh.j2 확장자 파일을 .j2를 제외하고 
+# ubuntu 그룹의 ubuntu 소유자로 rwx r-x r-x 권한으로 스크립트 파읿 배포
+- name: Deploy start-schema-registry.sh.j2 to instance
+  template:
+    src: start-schema-registry.sh.j2
+    dest: /engn/confluent/scripts/start-schema-registry.sh
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+    
+- name: Deploy stop-schema-registry.sh.j2 to instance
+  template:
+    src: stop-schema-registry.sh.j2
+    dest: /engn/confluent/scripts/stop-schema-registry.sh
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+
+# 이건 쉘 파일을 실행하는 명령어
+- name: Run start-schema-registry.sh
+  command: /engn/confluent/scripts/start-schema-registry.sh
+  become: yes
