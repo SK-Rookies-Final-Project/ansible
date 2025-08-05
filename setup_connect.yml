@@ -4,7 +4,6 @@
   roles:
     - java_setup
 
-
 - name: Generate Kafka Cluster UUID
   hosts: Broker[0] 
   become: true
@@ -40,3 +39,20 @@
     - secret.yml
   roles:
     - Brokers
+
+
+- name: Setup Connect-Worker1
+  hosts: Connect-Worker1
+  become: true
+  roles:
+    - connect-worker1
+    - rds_setup
+    - jmx_setup
+
+- name: Setup Connect-Worker2
+  hosts: Connect-Worker2
+  become: true
+  roles:
+    - connect-worker2
+    - rds_setup
+    - jmx_setup
