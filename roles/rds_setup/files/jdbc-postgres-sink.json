@@ -1,0 +1,19 @@
+{
+  "name": "jdbc-postgres-sink",
+  "config": {
+    "name": "jdbc-postgres-sink",
+    "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+    "connection.url": "jdbc:postgresql://tgpostgresql.c3s26k4iyom0.ap-northeast-2.rds.amazonaws.com:5432/tgpostgreDB",
+    "connection.user": "tgadmin",
+    "connection.password": "tgmaster!",
+    "db.timezone": "Asia/Seoul",
+    "tasks.max": "1",
+    "insert.mode": "upsert",
+    "pk.mode": "record_key",
+    "pk.fields": "user_id",
+    "table.name.format": "${topic}",
+    "auto.create": "true",
+    "auto.evolve": "true",
+    "topics": "mysql-user"
+  }
+}

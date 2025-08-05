@@ -1,0 +1,94 @@
+# connector_test 디렉토리 생성
+- name: Create connector_test directory
+  file:
+    path: /home/ubuntu/connector_test
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+  become: true
+
+- name: Deploy JDBC MySQL Source Connector config
+  copy:
+    src: jdbc-mysql-source.json
+    dest: /home/ubuntu/connector_test/jdbc-mysql-source.json
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+  become: true
+
+
+- name: Deploy JDBC postgeSQL Sink Connector config
+  copy:
+    src: jdbc-mysql-source.json
+    dest: /home/ubuntu/connector_test/jdbc-postgres-sink.json
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+  become: true
+
+# 커넥터 등록용 쉘 스크립트 복사
+- name: Copy create-connector.sh script to remote host
+  copy:
+    src: create-connector.sh
+    dest: /engn/confluent/scripts/create-connector.sh
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+  become: true
+
+
+
+# Kafka JDBC Connector 설치 (Confluent Hub CLI 사용)
+- name: Install Kafka Connect JDBC connector using Confluent CLI
+  shell: ./confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:latest
+  args:
+    chdir: /engn/confluent/bin
+    creates: /engn/confluent/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
+  become: true
+
+# MySQL JDBC 드라이버 다운로드 (wget 사용)
+- name: Download MySQL JDBC Driver using wget
+  shell: |
+    wget -O /tmp/mysql-connector.deb https://downloads.mysql.com/archives/get/p/3/file/mysql-connector-j_8.4.0-1ubuntu24.04_all.deb
+  args:
+    creates: /tmp/mysql-connector.deb
+  become: true
+
+# MySQL JDBC 드라이버 설치 (.deb 패키지 설치)
+- name: Install JDBC Driver
+  apt:
+    deb: /tmp/mysql-connector.deb
+  become: true
+
+# JDBC .jar 파일 존재 여부 확인
+- name: Ensure JDBC jar file exists
+  stat:
+    path: /usr/share/java/mysql-connector-j-8.4.0.jar
+  register: jdbc_jar
+
+# JDBC .jar 파일을 Kafka Connect의 lib 디렉토리로 복사
+- name: Copy JDBC jar to Kafka Connect lib path
+  copy:
+    src: /usr/share/java/mysql-connector-j-8.4.0.jar
+    dest: /engn/confluent/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mysql-connector-j-8.4.0.jar
+    remote_src: yes
+  when: jdbc_jar.stat.exists
+  become: true
+
+# MySQL 클라이언트 설치
+- name: Install MySQL client core 8.0
+  apt:
+    name: mysql-client-core-8.0
+    state: present
+    update_cache: yes
+  become: true
+
+# PostgreSQL 클라이언트 설치
+- name: Install PostgreSQL client
+  apt:
+    name: postgresql-client
+    state: present
+    update_cache: yes
+  become: true
+

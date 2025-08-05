@@ -1,0 +1,24 @@
+- name: Create directory for monitoring
+  file:
+    path: /home/ubuntu/monitoring
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+    recurse: yes
+
+- name: Clone jmx-monitoring-stacks repository
+  git:
+    repo: https://github.com/confluentinc/jmx-monitoring-stacks.git
+    dest: /home/ubuntu/monitoring/jmx-monitoring-stacks
+    update: no
+
+- name: Copy JMX exporter files to monitoring directory
+  copy:
+    src: /home/ubuntu/monitoring/jmx-monitoring-stacks/shared-assets/jmx-exporter/
+    dest: /home/ubuntu/monitoring/
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+    remote_src: yes
+  ignore_errors: no
