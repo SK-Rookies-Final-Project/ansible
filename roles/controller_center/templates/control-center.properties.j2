@@ -1,0 +1,23 @@
+### control-center.properties ###
+bootstrap.servers=3.38.79.148:9092,3.36.230.37:9092,52.78.31.68:9092
+
+#zookeeper.connect=kafka1:2181,kafka2:2181/confluent
+confluent.controlcenter.command.topic=_confluent-command
+confluent.controlcenter.command.topic.replication=3
+confluent.controlcenter.connect.connect-cluster.cluster=http://ip-10-0-1-109.ap-northeast-2.compute.internal:8083,http://ip-10-0-1-167.ap-northeast-2.compute.internal:8081
+confluent.controlcenter.data.dir=/data/control-center
+confluent.controlcenter.id=1
+confluent.controlcenter.internal.topics.partitions=2
+confluent.controlcenter.internal.topics.replication=3
+confluent.controlcenter.name=control-center
+confluent.controlcenter.rest.listeners=http://0.0.0.0:9021
+confluent.controlcenter.schema.registry.url=http://15.164.71.109:8081,http://3.39.63.154:8081
+confluent.controlcenter.ui.autoupdate.enable=false
+confluent.controlcenter.ui.controller.chart.enable=true
+confluent.controlcenter.usage.data.collection.enable=false
+confluent.metrics.topic=_confluent-metrics
+confluent.metrics.topic.partitions=12
+confluent.metrics.topic.replication=3
+confluent.monitoring.interceptor.security.protocol=PLAINTEXT
+confluent.monitoring.interceptor.topic.partitions=2
+confluent.monitoring.interceptor.topic.replication=3
