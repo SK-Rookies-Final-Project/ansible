@@ -1,0 +1,60 @@
+### schema-registry1###
+
+######################################################################################
+## Schema Registry가 어떻게 동작할 지 결정하는 메인 설정파일
+## 해당 파일이 없으면 Schema Registry는 동작하지 않음
+######################################################################################
+# Kafka Cluster와 연결 된 Schema Registry 인스턴스를 
+# HTTP 8081 포트에서 실행하며
+# 모든 요청을 수신하고
+# _schemas 토픽에 복제 계수 3으로 스키마를 저장하며
+# 클러스터링을 위해 schema-cluster 그룹 ID로 참여하고
+# 스키마 호환성은 양방향 full로 설정한 구성
+######################################################################################
+
+confluent.license.topic=_confluent-command
+
+# 디버그 모드 비활성화
+debug=false
+
+# 호스트 이름
+host.name=Schema-Registry1
+
+# Schema Registry 인스턴스 간 통신에 사용할 프로토콜 (default: http) 
+inter.instance.protocol=http
+
+# Kafka Cluster의 Broker IP 
+# Schema Registry는 내부적으로 Kafka에 _schemas 토픽을 생성해서 데이터를 저장해야 함으로 
+# Kafka 클러스터와 반드시 연결되어야 함
+kafkastore.bootstrap.servers=13.125.126.147:9092, 13.124.246.221:9092, 3.38.119.135:9092
+
+
+# Kafka와 통신할 때 보안 프로토콜 
+# - PLAINTEXT: 암호화 없이 통신
+# - SASL_SSL: 운영환경에서는 이거로 변경
+kafkastore.security.protocol=PLAINTEXT
+
+# Kafka에 저장 될 스카마 정보를 담는 토픽 이름. (default: _schemas ) 
+# 모든 스키마는 _schemas에 저장.
+kafkastore.topic=_schemas
+
+# _schemas 토픽의 복제 계수 (replication factor).
+# Kafka Cluster내 3개의 브로커에 고가용성을 확보하려고 복제본 생성
+kafkastore.topic.replication.factor=3
+
+# Schema Registry가 외부 요청을 수신할 주소
+# 0.0.0.0은 모든 네트워크 인터페이스에서 접근 허용
+# 8081 port는 Schema Registry의 기본 포트
+listeners=http://0.0.0.0:8081
+
+# 스키마 호환성 설정
+# full: 이전 버전과의 양방향 호환성 보장
+# - 새로은 스키마는 예전 데이터를 읽을 수 있어야 하고 
+# - 예전 스키마로 새 데이터를 읽을 수 있어야 함
+# - 매우 엄격한 설정
+schema.compatibility.level=full
+
+# Schema Registry 간 클러스터링에 사용하는 그룹 ID
+# - 이 값이 같으면 여러 Schema Registry 인스턴스가 하나의 클러스터로 동작
+# - 리더 선출도 포함
+schema.registry.group.id=schema-cluster
