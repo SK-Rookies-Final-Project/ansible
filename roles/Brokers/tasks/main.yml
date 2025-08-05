@@ -1,0 +1,72 @@
+# Kafka broker 설정 파일을 배포하기 위한 디렉토리 생성
+- name: Create directory for Kafka config files
+  file:
+    path: /engn/confluent/properties/data
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+    recurse: yes
+
+- name: Create directory for Scripts
+  file:
+    path: /engn/confluent/scripts
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+    recurse: yes
+
+# broker의 메인 설정 파일 배포
+- name: Deploy broker.properties.j2 to instance
+  template:
+    src: broker.properties.j2
+    dest: /engn/confluent/properties/broker.properties
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+
+# broker의 로그 설정 파일 배포
+- name: Deploy broker-log4j.properties.j2 to instance
+  template:
+    src: broker-log4j.properties.j2
+    dest: /engn/confluent/properties/broker-log4j.properties
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+
+- name: Check if Kafka already formatted
+  stat:
+    path: /data/broker/meta.properties
+  register: meta_exists
+
+- name: Format Kafka storage with UUID (only if not already formatted)
+  shell: |
+    source /etc/profile.d/java.sh && \
+    /engn/confluent/bin/kafka-storage format -t {{ cluster_uuid }} -c /engn/confluent/properties/broker.properties
+  args:
+    chdir: /engn/confluent/bin
+    executable: /bin/bash
+  when: cluster_uuid is defined and not meta_exists.stat.exists
+  become: true
+
+
+- name: Start-Broker
+  template:
+    src: start-broker.sh.j2
+    dest: /engn/confluent/scripts/start-broker.sh
+    mode: '0755'
+
+# - name: run start-broker.sh
+#   shell: /engn/confluent/scripts/start-broker.sh
+#   args:
+#     executable: /bin/bash
+#   become: true
+#   become_user: ubuntu
+#   register: result
+
+- name: Stop-Broker
+  template:
+    src: stop-broker.sh.j2
+    dest: /engn/confluent/scripts/stop-broker.sh
+    mode: '0755'

@@ -1,0 +1,112 @@
+- name: Install required packages
+  apt:
+    name:
+      - wget
+      - net-tools
+      - openssh-server
+      - firewalld
+      - unzip
+      - curl
+      - git
+    state: present
+    update_cache: yes
+
+# 방화벽 서비스 비활성화
+- name: Disable firewalld
+  service:
+    name: firewalld
+    enabled: false
+    state: stopped
+
+# SSH 서비스 활성화
+- name: Enable SSH service
+  service:
+    name: ssh
+    state: started
+    enabled: true
+
+- name: Download OpenJDK 17.0.8 (Adoptium)
+  get_url:
+    url: https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.8+7/OpenJDK17U-jdk_x64_linux_hotspot_17.0.8_7.tar.gz
+    dest: /home/ubuntu/openjdk-17.0.8.tar.gz
+
+
+- name: Extract OpenJDK 17.0.8 to /opt/java
+  unarchive:
+    src: /home/ubuntu/openjdk-17.0.8.tar.gz
+    dest: /home/ubuntu
+    remote_src: yes
+
+- name: Set JAVA_HOME and update PATH for Java 17
+  lineinfile:
+    path: /etc/profile.d/java.sh
+    line: "{{ item }}"
+    create: yes
+    mode: '0755'
+  loop:
+    - 'export JAVA_HOME=/home/ubuntu/jdk-17.0.8+7'
+    - 'export PATH=$JAVA_HOME/bin:$PATH'
+
+- name: Ensure JAVA_HOME is applied for current session
+  shell: source /etc/profile.d/java.sh
+  args:
+    executable: /bin/bash
+
+- name: Ensure /usr/bin/java points to installed OpenJDK 17
+  file:
+    src: /home/ubuntu/jdk-17.0.8+7/bin/java
+    dest: /usr/bin/java
+    state: link
+    force: yes
+
+- name: Ensure /usr/bin/javac points to installed OpenJDK 17
+  file:
+    src: /home/ubuntu/jdk-17.0.8+7/bin/javac
+    dest: /usr/bin/javac
+    state: link
+    force: yes
+
+
+# 기본 디렉토리 생성
+- name: Create required directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+  loop:
+    - /data
+    - /log
+    - /engn
+
+# 디렉토리 권한 부여
+- name: Change ownership of directories
+  file:
+    path: "{{ item }}"
+    owner: ubuntu
+    group: ubuntu
+    recurse: yes
+  loop:
+    - /data
+    - /log
+    - /engn
+
+# 컨플루언트 플랫폼 스크립트 설치
+- name: Download Confluent Platform archive
+  get_url:
+    url: https://packages.confluent.io/archive/7.7/confluent-7.7.1.tar.gz
+    dest: /engn/confluent-7.7.1.tar.gz
+
+- name: Extract Confluent Platform archive
+  unarchive:
+    src: /engn/confluent-7.7.1.tar.gz
+    dest: /engn
+    remote_src: yes
+
+# 심볼릭 링크 생성
+- name: Create symbolic link for Confluent directory
+  file:
+    src: /engn/confluent-7.7.1
+    dest: /engn/confluent
+    state: link

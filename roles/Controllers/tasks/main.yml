@@ -1,0 +1,77 @@
+- name: Create directory properties
+  file:
+    path: /engn/confluent/properties/
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+    recurse: yes
+
+- name: Deploy controller.properties.j2 to instance
+  template:
+    src: controller.properties.j2
+    dest: /engn/confluent/properties/controller.properties
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+
+- name: Deploy controller-log4j.properties.j2 to instance
+  template:
+    src: controller-log4j.properties.j2
+    dest: /engn/confluent/properties/controller-log4j.properties
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+
+- name: Check if Controller already formatted
+  stat:
+    path: /data/controller/meta.properties
+  register: controller_meta_exists
+
+- name: Format Controller storage with UUID (only if not already formatted)
+  shell: |
+    source /etc/profile.d/java.sh && \
+    /engn/confluent/bin/kafka-storage format \
+    -t {{ cluster_uuid }} \
+    -c /engn/confluent/properties/controller.properties
+  args:
+    chdir: /engn/confluent/bin
+    executable: /bin/bash
+  when: cluster_uuid is defined and not controller_meta_exists.stat.exists
+  become: true
+
+- name: Create directory scripts
+  file:
+    path: /engn/confluent/scripts/
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+    recurse: yes
+
+- name: Deploy start-controller.sh to instance
+  template:
+    src: start-controller.sh.j2
+    dest: /engn/confluent/scripts/start-controller.sh
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+
+- name: Deploy stop-controller.sh to instance
+  template:
+    src: stop-controller.sh.j2
+    dest: /engn/confluent/scripts/stop-controller.sh
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755' 
+
+# - name: Start Controller
+#   shell: /engn/confluent/scripts/start-controller.sh
+#   args:
+#     executable: /bin/bash
+#   become: true
+#   become_user: ubuntu
+#   register: result
+
+- debug:
+    var: result.stdout_lines

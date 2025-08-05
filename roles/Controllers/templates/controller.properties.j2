@@ -1,0 +1,77 @@
+#controller1
+
+auto.create.topics.enable=false
+
+confluent.balancer.disk.max.load=0.85
+confluent.balancer.enable=true
+confluent.balancer.heal.uneven.load.trigger=EMPTY_BROKER
+confluent.balancer.topic.replication.factor=3
+
+confluent.cluster.link.metadata.topic.min.isr=2
+confluent.cluster.link.metadata.topic.replication.factor=3
+
+confluent.license.topic=_confluent-command
+confluent.license.topic.replication.factor=3
+
+confluent.metadata.topic.replication.factor=3
+# !! 여기 바꿔주기 !!
+confluent.metrics.reporter.bootstrap.servers=3.38.79.148:9092,3.36.230.37:9092,52.78.31.68:9092
+# confluent.metrics.reporter.bootstrap.servers=3.37.179.242:9092
+
+# Broker1 EAI IP:9092, Broker2 EAI IP:9092, Broker3 EAI IP:9092
+
+confluent.metrics.reporter.security.protocol=PLAINTEXT
+confluent.metrics.reporter.topic.replicas=3
+
+# !! 여기 바꿔주기 !!
+confluent.schema.registry.url=http://15.164.71.109:8081,http://3.39.63.154:8081
+# confluent.schema.registry.url=http://43.200.138.178:8081
+
+# http://schema-registry1 EAI IP:8081, http://schema-registry2 EAI IP:8081
+
+confluent.tier.enable=false
+
+controller.listener.names=CONTROLLER
+# !! 여기 바꿔주기 !!
+#controller.quorum.voters=i-00f45de4df93f754a@ip-10-0-1-98.ap-northeast-2.compute.internal:9093,i-068cc95fb9c65e1e7@ip-10-0-1-45.ap-northeast-2.compute.internal:9093,i-0354f3f291195f81b@ip-10-0-1-214.ap-northeast-2.compute.internal:9093
+controller.quorum.voters=101@10.0.1.166:9093,102@10.0.1.199:9093,103@10.0.1.242:9093
+#controller.quorum.voters=101@172.31.36.19:9093
+# 1번controllerID@1번controller_PrivateDNS:9093, 2번controllerID@2번controller_PrivateDNS:9093, 3번controllerID@3번 controller_PrivateDNS:9093
+
+default.replication.factor=3
+
+# inter.broker.listener.name=BROKER
+kafka.rest.enable=false
+
+listeners=CONTROLLER://:9093
+listener.security.protocol.map=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+
+log.cleanup.policy=delete
+log.dirs=/data/controller
+log.retention.check.interval.ms=300000
+log.retention.hours=72
+log.segment.bytes=1073741824
+
+message.max.bytes=1048588
+{# metadata.max.retention.ms=604800000 #}
+metric.reporters=io.confluent.metrics.reporter.ConfluentMetricsReporter
+min.insync.replicas=2
+
+node.id={{ node_id }}
+# 각 Controller 마다 다르게 ex) controller2번에서는 102로 지정
+
+num.io.threads=8
+num.network.threads=3
+num.partitions=3
+num.recovery.threads.per.data.dir=1
+offsets.topic.replication.factor=3
+
+process.roles=controller
+
+socket.receive.buffer.bytes=102400
+socket.request.max.bytes=104857600
+socket.send.buffer.bytes=102400
+transaction.state.log.min.isr=2
+transaction.state.log.replication.factor=3
+
+confluent.telemetry.enable=false

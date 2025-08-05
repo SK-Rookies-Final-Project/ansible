@@ -1,0 +1,98 @@
+#!/bin/bash
+CONFLUENT_HOME="/home/ubuntu/monitoring"
+SERVER_NAME={{ server_name }}
+PROPERTIES_FILE="${CONFLUENT_HOME}/properties/broker.properties"
+DATA_DIR="/data/broker"
+LOG_DIR="/log/broker"
+export LOG_DIR
+### java home
+export JAVA_HOME="/home/ubuntu/jdk-17.0.8+7"
+######################################################################
+### memory options
+KAFKA_HEAP_OPTS="${KAFKA_HEAP_OPTS} -Xms4G -Xmx4G"
+export KAFKA_HEAP_OPTS
+### performance
+KAFKA_JVM_PERFORMANCE_OPTS="${KAFKA_JVM_PERFORMANCE_OPTS} -server"
+KAFKA_JVM_PERFORMANCE_OPTS="${KAFKA_JVM_PERFORMANCE_OPTS} -XX:+UseG1GC"
+KAFKA_JVM_PERFORMANCE_OPTS="${KAFKA_JVM_PERFORMANCE_OPTS} -XX:MaxGCPauseMillis=20"
+KAFKA_JVM_PERFORMANCE_OPTS="${KAFKA_JVM_PERFORMANCE_OPTS} -XX:InitiatingHeapOccupancyPercent=35"
+KAFKA_JVM_PERFORMANCE_OPTS="${KAFKA_JVM_PERFORMANCE_OPTS} -XX:+ExplicitGCInvokesConcurrent"
+KAFKA_JVM_PERFORMANCE_OPTS="${KAFKA_JVM_PERFORMANCE_OPTS} -XX:MaxInlineLevel=15"
+KAFKA_JVM_PERFORMANCE_OPTS="${KAFKA_JVM_PERFORMANCE_OPTS} -Djava.awt.headless=true"
+export KAFKA_JVM_PERFORMANCE_OPTS
+### generic jvm settings
+
+# jmx exporter jar 파일 경로: /home/ubuntu/monitoring/jmx_prometheus_javaagent-0.20.0.ja
+
+KAFKA_OPTS=""
+KAFKA_OPTS="${KAFKA_OPTS} -D${SERVER_NAME}"
+
+# Broker - 2346 : 포트설정 각 역할에 맞게
+KAFKA_OPTS="${KAFKA_OPTS} -D${SERVER_NAME} -javaagent:/home/ubuntu/monitoring/jmx_prometheus_javaagent-0.20.0.jar=2346:/home/ubuntu/monitoring/kafka_broker.yml"
+export KAFKA_OPTS
+
+
+### gc option
+export GC_LOG_ENABLED="true"
+### jmx
+# export JMX_PORT=""
+KAFKA_JMX_OPTS="${KAFKA_JMX_OPTS} -Dcom.sun.management.jmxremote"
+KAFKA_JMX_OPTS="${KAFKA_JMX_OPTS} -Dcom.sun.management.jmxremote.authenticate=false"
+KAFKA_JMX_OPTS="${KAFKA_JMX_OPTS} -Dcom.sun.management.jmxremote.ssl=false"
+export KAFKA_JMX_OPTS
+
+### log4j
+KAFKA_LOG4J_OPTS="${KAFKA_LOG4J_OPTS} -Dlog4j.configuration=file:${CONFLUENT_HOME}/properties/broker-log4j.properties"
+export KAFKA_LOG4J_OPTS
+
+
+#####################################################################
+ ## aws credentials
+ export AWS_ACCESS_KEY_ID="{{ aws_access_key_id }}"
+ export AWS_SECRET_ACCESS_KEY="{{ aws_secret_access_key }}"
+ #####################################################################
+ 
+ ## check current user
+ CURRENT_USER="$(id -un)"
+ if [ "${CURRENT_USER}" = "root" ]; then
+ echo "[ERROR] The current user is root!"
+ exit
+ fi
+
+ ### check running process
+ PID="$(pgrep -xa java | grep ${PROPERTIES_FILE} | grep ${SERVER_NAME} | awk '{print $1}')"
+ if [ -n "${PID}" ]; then
+ echo "[ERROR] The ${SERVER_NAME} (pid ${PID}) is already running!"
+ exit
+ fi
+ 
+ ### create data and log dirs
+ if [ ! -d "${DATA_DIR}" ]; then
+ mkdir -p ${DATA_DIR}
+ fi
+ if [ ! -d "${LOG_DIR}/backup" ]; then
+ mkdir -p ${LOG_DIR}/backup
+ fi
+
+### format
+if [ ! -f "${DATA_DIR}/meta.properties" ]; then
+  echo "[INFO] Formatting data directory for ${SERVER_NAME}..."
+
+  unset KAFKA_OPTS
+  unset KAFKA_JVM_PERFORMANCE_OPTS
+  unset KAFKA_LOG4J_OPTS
+
+  ${CONFLUENT_HOME}/bin/kafka-storage format -t {{ cluster_uuid }} -c ${PROPERTIES_FILE}
+else
+  echo "[INFO] Data directory already formatted for ${SERVER_NAME}."
+fi
+
+ ### backup stdout log
+ GET_DATE="$(date +'%Y%m%d_%H%M%S')"
+ if [ -f "${LOG_DIR}/nohup.${SERVER_NAME}.out" ]; then
+ mv ${LOG_DIR}/nohup.${SERVER_NAME}.out ${LOG_DIR}/backup/nohup.${SERVER_NAME}.${GET_DATE}.out
+ fi
+ 
+ touch ${LOG_DIR}/nohup.${SERVER_NAME}.out
+ nohup ${CONFLUENT_HOME}/bin/kafka-server-start ${PROPERTIES_FILE} > ${LOG_DIR}/nohup.${SERVER_NAME}.out
+ 2>&1 &
