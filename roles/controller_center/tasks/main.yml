@@ -1,0 +1,60 @@
+# Kafka Connect 설정 파일을 배포하기 위한 디렉토리 및 템플릿 설정
+- name: Create directory for Kafka config files
+  file:
+    path: /engn/confluent/properties
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: "0755"
+    recurse: yes
+
+# Confluent Control Center의 메인 설정 파일 배포
+- name: Deploy confluent-control-center.properties to instance
+  template:
+    src: control-center.properties.j2
+    dest: /engn/confluent/properties/control-center.properties
+    owner: ubuntu
+    group: ubuntu
+    mode: "0644"
+
+# Confluent Control Center의 로그 설정 파일 배포
+- name: Deploy control-center-log4j.properties.j2 to instance
+  template:
+    src: control-center-log4j.properties.j2
+    dest: /engn/confluent/properties/control-center-log4j.properties
+    owner: ubuntu
+    group: ubuntu
+    mode: "0644"
+
+# Control Center 스크립트를 저장할 디렉토리 생성
+- name: Create directory for Kafka config files tlqkf
+  file:
+    path: /engn/confluent/scripts
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: "0755"
+    recurse: yes
+
+# Confluent Control Center 실행 스크립트 템플릿 배포
+- name: Deploy start-control-center.sh.j2 to instance
+  template:
+    src: start-control-center.sh.j2
+    dest: /engn/confluent/scripts/start-control-center.sh
+    owner: ubuntu
+    group: ubuntu
+    mode: "0755"
+
+# Confluent Control Center 종료 스크립트 템플릿 배포
+- name: Deploy stop-control-center.sh.j2 to instance
+  template:
+    src: stop-control-center.sh.j2
+    dest: /engn/confluent/scripts/stop-control-center.sh
+    owner: ubuntu
+    group: ubuntu
+    mode: "0755"
+
+# start-control-center.sh 스크립트 실행
+- name: run start-control-center.sh
+  command: /engn/confluent/scripts/start-control-center.sh
+  become: yes
