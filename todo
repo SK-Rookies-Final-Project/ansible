@@ -1,0 +1,6 @@
+1. setup_connect에 roles 디렉토리명에 따른 hosts 소문자로 변경
+2. 각 roles에 대해서 IP가 들어가는 부분 변경
+    2-1. 환경변수
+    2-2. env파일
+3. 루트 디렉토리 inventory.ini가 자동으로 갱신 되도록 변경
+4. 

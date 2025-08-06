@@ -1,0 +1,164 @@
+# 1. 필수 패키지 설치
+- name: Install required packages
+  # apt 모듈을 사용해 name 목록에 나열 된 패키지들을 설치
+  apt:
+    name:
+      - wget            # 파일 다운로드 도구
+      - net-tools       # ifconfig 등 네트워크 유틸
+      - openssh-server  # SSH 서버 (원격 접속 허용)
+      - firewalld       # 방화벽 서비스
+      - unzip           # 압축 해제 유틸
+      - curl            # HTTP 요청 도구
+      - git             # Git 버전 관리 도구
+    state: present      # 설치되있으면 유지하고 설치되어 있지 않으면 설치
+    update_cache: yes   # apt 패키지 목록을 먼저 최신화(sudo apt update와동일)
+
+# 2. 방화벽 서비스 비활성화
+- name: Disable firewalld
+  service:
+    name: firewalld     # firewalld 서비스(Linux의 동적 관리 방화벽) 
+    enabled: false      # 부팅 시 자동 시작 비활성화
+    state: stopped      # 실행되고 있다면 지금 당장 중지
+
+# 3. SSH 서비스 활성화
+- name: Enable SSH service
+  service:
+    name: ssh           # SSH 서비스
+    state: started      # 현재 상태에서 실행
+    enabled: true       # 부팅 시 자동 시작
+
+# 4. JDK 설치 - 파일 다운로드
+- name: Download JDK using wget
+  # shell: 쉘 명령어를 실행하겠다 
+  # >: 줄 바꿈을 그냥 공백 한 칸으로 바꿔서 명령어를 실행해겠다
+  # wget -O <PATH> <URL>
+  #   - wget: 파일 다운로드 명령
+  #   - -O: 저장할 파일 이름 지정
+  #   - <PATH>: 저장할 파일 경로
+  #   - <URL>: 다운받을 파일 링크
+  shell: >
+    wget -O /home/ubuntu/openjdk-17.0.8_linux-x64_bin.tar.gz
+    https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.8+7/OpenJDK17U-jdk_x64_linux_hotspot_17.0.8_7.tar.gz
+  # args:
+  #   creates: 해당 파일이 존재하면 해당 작업은 생략해라
+  args:
+    creates: /home/ubuntu/openjdk-17.0.8_linux-x64_bin.tar.gz
+#- name: Download JDK file using wget
+#  # get_url 모듈을 사용해서 JDK 압축 파일을 지정된 경로(/home/ubuntu)에 다운로드
+#  get_url:
+#    url: https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.8+7/OpenJDK17U-jdk_x64_linux_hotspot_17.0.8_7.tar.gz
+#    dest: /home/ubuntu/openjdk-17.0.8_linux-x64_bin.tar.gz
+
+# 5. JDK 압축 해제
+- name: Extract JDK
+  unarchive:
+    src: /home/ubuntu/openjdk-17.0.8_linux-x64_bin.tar.gz # 압축 대상
+    
+    dest: /home/ubuntu  # 압축 해제 위치
+    remote_src: yes     # 이미 서버에 존재하는 파일을 대상으로 압축 해제
+    
+# 이름을 jdk-17.0.8+7에서 jdk-17.0.8로 변경    
+- name: Rename extracted JDK directory to jdk-17.0.8+7 => jdk-17.0.8
+  command: mv /home/ubuntu/jdk-17.0.8+7 /home/ubuntu/jdk-17.0.8
+  args:
+    creates: /home/ubuntu/jdk-17.0.8
+
+# 기존 jdk-17.0.8+7 파일 지워버리기
+- name: Delete jdk-17.0.8+7 file
+  command: sudo rm -rf /home/ubuntu/jdk-17.0.8+7
+
+# 6. JAVA 환경변수 설정
+- name: Set JAVA_HOME and update PATH
+  # lineinfile 모듈을 사용해서 /etc/profile 파일에 환경 변수 설정 줄 추가
+  # with_items로 두 줄을 반복 적용
+  lineinfile:
+    path: /etc/profile    # 수정할 대상 파일 경로
+    line: "{{ item }}"    # 추가할 줄 (아래 with_items 항목)
+    create: yes           # /etc/profile 경로가 없다면 생성 
+  with_items:
+    - 'export JAVA_HOME=/home/ubuntu/jdk-17.0.8'  # JAVA_HOME 설정
+    - 'export PATH=$JAVA_HOME/bin:$PATH'          # PATH에 JAVA 추가
+
+# 7. 환경 변수 적용
+- name: Apply environment
+  # 방금 추가 한 JAVA_HOME과 PATH 설정을 현재 셸에 반영
+  shell: source /etc/profile
+  args:
+    executable: /bin/bash # bin/bash 셸을 사용해 명령 실행  
+
+# 8. java, javac 바이너리 시스템 링크 설정
+- name: Link java binary to /usr/bin/java  # java 실행 파일을 심볼릭링크로 설정하겠다는 메세지 
+  file:
+    src: /home/ubuntu/jdk-17.0.8/bin/java  # 실제 실행 파일
+    dest: /usr/bin/java                    # 시스템 경로에 링크 생성
+    state: link                            # 심볼릭 링크 상태로 설정
+    force: yes                             # 기존 파일 덮어쓰기 허용
+
+- name: Link javac binary to /usr/bin/javac # javac 실행 파일을 심볼릭링크로 설정하겠다는 메세지 
+  file:
+    src: /home/ubuntu/jdk-17.0.8/bin/javac # 실제 실행 파일
+    dest: /usr/bin/javac                   # 시스템 경로에 링크 생성
+    state: link                            # 심볼릭 링크 상태로 설정
+    force: yes                             # 기존 파일 덮어쓰기 허용
+
+
+# 9. 기본 디렉토리 생성(/data, /log, /engn)
+- name: Create required directories
+  file:
+    path: "{{ item }}"  # loop에 설정 된 /data, /log, /engn이 바인딩
+    state: directory    # directory로 상태 설정
+    owner: ubuntu       # 
+    group: ubuntu
+    mode: '0755'
+  loop:
+    - /data
+    - /log
+    - /engn
+
+# 10. 디렉토리 소유자 및 권한 설정
+- name: Change ownership of directories
+  file:
+    path: "{{ item }}"
+    owner: ubuntu
+    group: ubuntu
+    recurse: yes    # 하위 경로 포함 변경 
+  loop:
+    - /data
+    - /log
+    - /engn
+
+# 11. 컨플루언트 플랫폼 스크립트 압축파일을 get-url 모듈을 통해 설치
+- name: Download Confluent Platform archive using wget
+  shell: >
+    wget -O /engn/confluent-7.7.1.tar.gz https://packages.confluent.io/archive/7.7/confluent-7.7.1.tar.gz
+  args:
+    creates: /engn/confluent-7.7.1.tar.gz
+#- name: Download Confluent Platform archive
+#  get_url:
+#    # 해당 url의 파일을
+#    url: https://packages.confluent.io/archive/7.7/confluent-7.7.1.tar.gz
+#    # /engn 경로에 confluent-7.7.1.tar.gz 파일명으로 설치
+#    dest: /engn/confluent-7.7.1.tar.gz
+
+# 12. 위에서 받은 압축 파일을 unarchive 모듈을 통해 /engn에 압축 해제(파일이 존재하면 덮어쓰기)
+- name: Extract Confluent Platform archive
+  # unarchive: 압축 해제하는 모듈
+  unarchive:
+    # /engn/confluent-7.7.1.tar.gz 압축 파일을
+    src: /engn/confluent-7.7.1.tar.gz
+    # /engn 디렉토리에 저장
+    dest: /engn
+    # 있으면 덮어쓰기
+    remote_src: yes
+
+# 13. Confluent 디렉토리 심볼릭 링크 생성
+- name: Create symbolic link for Confluent directory
+  # file: 심볼릭 링크를 생성하는 모듈
+  file:
+    # 해당 경로의 파일을
+    src: /engn/confluent-7.7.1
+    # 이러한 이름의 심볼릭 링크로 설정
+    dest: /engn/confluent
+    # 심볼릭 링크임을 명시
+    state: link
+

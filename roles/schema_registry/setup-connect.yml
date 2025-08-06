@@ -1,0 +1,6 @@
+- name: Setup Schema Registry
+  hosts: SchemaRegistries
+  become: true
+  roles:
+    - java_setup
+    - schema-registry
