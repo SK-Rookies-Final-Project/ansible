@@ -9,7 +9,7 @@
   become: true
 
 - name: Deploy JDBC MySQL Source Connector config
-  :
+  template:
     src: jdbc-mysql-source.json.j2
     dest: /home/ubuntu/connector_test/jdbc-mysql-source.json
     owner: ubuntu

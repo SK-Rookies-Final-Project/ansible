@@ -22,6 +22,24 @@
 #         cluster_uuid: "{{ uuid_result.stdout }}"
 #       loop: "{{ groups['all'] }}"
 
+# # 권한 설정 추가
+# - name: Setup Kafka Data Directories
+#   hosts: all
+#   become: true
+#   tasks:
+#     - name: Create Kafka data directories
+#       file:
+#         path: "{{ item }}"
+#         state: directory
+#         owner: ubuntu
+#         group: ubuntu
+#         mode: '0755'
+#         recurse: yes
+#       loop:
+#         - /data/broker
+#         - /data/controller
+#         - /engn/confluent/logs
+
 # - name: Setup Kafka Controllers
 #   hosts: controllers
 #   become: true
@@ -40,19 +58,18 @@
 #   roles:
 #     - connect_workers
 #     - rds_setup
-#     - jmx_setup
 
 # - name: Setup CP1_Schema-Registries
-#   hosts: schma_registries
+#   hosts: schema_registries
 #   become: true
 #   roles:
 #     - schema_registries
 
-# - name: Setup CP1_C3
-#   hosts: control_center
-#   become: true
-#   roles: 
-#     - controller_center
+- name: Setup CP1_C3
+  hosts: control_center
+  become: true
+  roles: 
+    - controller_center
 
 # - name: Install Java on all nodes
 #   hosts: all
@@ -60,36 +77,57 @@
 #   roles:
 #     - jmx_setup
 
-# - name: Run script
+# - name: Start Kafka Controllers
 #   hosts: controllers
 #   become: true
-#   become_user: ubuntu
+#   become_user: ubuntu  # ubuntu 사용자로 실행
 #   tasks:
 #     - name: Execute controller start script in background
 #       shell: nohup /engn/confluent/scripts/start-controller.sh > /dev/null 2>&1 &
 #       args:
-#         executable: /bin/bash
-#       register: result
+#         executable: /bin/bash  # bash 쉘로 실행
+#       register: result         # 실행 결과를 변수에 저장
 
-- name: Run script
-  hosts: brokers
-  become: true
-  become_user: ubuntu
-  tasks:
-    - name: Execute controller start script
-      shell: nohup /engn/confluent/scripts/start-broker.sh  > /dev/null 2>&1 &
-      args:
-        executable: /bin/bash
-      register: result
-
-# - name: Run script
+# - name: Start Kafka Brokers
 #   hosts: brokers
 #   become: true
-#   become_user: ubuntu
+#   become_user: ubuntu  # ubuntu 사용자로 실행
 #   tasks:
-#     - name: Execute controller start script
-#       shell: /engn/confluent/scripts/start-broker.sh
+#     - name: Execute broker start script in background
+#       shell: nohup /engn/confluent/scripts/start-broker.sh > /dev/null 2>&1 &
 #       args:
-#         executable: /bin/bash
-#       register: result
+#         executable: /bin/bash  # bash 쉘로 실행
+#       register: result         # 실행 결과를 변수에 저장
 
+# - name: Start Kafka Schema-Registries
+#   hosts: schema_registries
+#   become: true
+#   become_user: ubuntu  # ubuntu 사용자로 실행
+#   tasks:
+#     - name: Execute schema-registry start script in background
+#       shell: nohup /engn/confluent/scripts/start-schema-registry.sh > /dev/null 2>&1 &
+#       args:
+#         executable: /bin/bash  # bash 쉘로 실행
+#       register: result         # 실행 결과를 변수에 저장
+
+# - name: Start Kafka Connect-Workers
+#   hosts: connect_workers
+#   become: true
+#   become_user: ubuntu  # ubuntu 사용자로 실행
+#   tasks:
+#     - name: Execute connect-worker start script in background
+#       shell: nohup /engn/confluent/scripts/start-connect.sh > /dev/null 2>&1 &
+#       args:
+#         executable: /bin/bash  # bash 쉘로 실행
+#       register: result         # 실행 결과를 변수에 저장
+
+- name: Start Kafka Control-Center
+  hosts: control_center
+  become: true
+  become_user: ubuntu  # ubuntu 사용자로 실행
+  tasks:
+    - name: Execute control_center start script in background
+      shell: nohup /engn/confluent/scripts/start-control-center.sh > /dev/null 2>&1 &
+      args:
+        executable: /bin/bash  # bash 쉘로 실행
+      register: result         # 실행 결과를 변수에 저장

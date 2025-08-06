@@ -19,7 +19,7 @@ CONTROL_CENTER_JVM_PERFORMANCE_OPTS="${CONTROL_CENTER_JVM_PERFORMANCE_OPTS} -XX:
 CONTROL_CENTER_JVM_PERFORMANCE_OPTS="${CONTROL_CENTER_JVM_PERFORMANCE_OPTS} -XX:MinMetaspaceFreeRatio=50"
 export CONTROL_CENTER_JVM_PERFORMANCE_OPTS
 ### generic jvm settings
-CONTROL_CENTER_OPTS="${CONTROL_CENTER_OPTS} -D${{server_name}}"
+CONTROL_CENTER_OPTS="${CONTROL_CENTER_OPTS} -D{{server_name}}"
 export CONTROL_CENTER_OPTS
 ### gc option
 export GC_LOG_ENABLED="true"
@@ -37,9 +37,9 @@ echo "[ERROR] The current user is root!"
 exit
 fi
 ### check running process
-PID="$(pgrep -xa java | grep ${PROPERTIES_FILE} | grep ${{server_name}} | awk '{print $1}')"
+PID="$(pgrep -xa java | grep ${PROPERTIES_FILE} | grep {{server_name}} | awk '{print $1}')"
 if [ -n "${PID}" ]; then
-echo "[ERROR] The ${{server_name}} (pid ${PID}) is already running!"
+echo "[ERROR] The {{server_name}} (pid ${PID}) is already running!"
 exit
 fi
 ### create data and log dirs

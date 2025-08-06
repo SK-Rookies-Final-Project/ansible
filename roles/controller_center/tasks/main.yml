@@ -1,5 +1,5 @@
 # Kafka Connect 설정 파일을 배포하기 위한 디렉토리 및 템플릿 설정
-- name: Create directory for Kafka config files
+- name: Create directory for Kafka properties
   file:
     path: /engn/confluent/properties
     state: directory
@@ -27,7 +27,7 @@
     mode: "0644"
 
 # Control Center 스크립트를 저장할 디렉토리 생성
-- name: Create directory for Kafka config files tlqkf
+- name: Create directory for Kafka scripts
   file:
     path: /engn/confluent/scripts
     state: directory

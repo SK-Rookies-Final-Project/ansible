@@ -1,0 +1,41 @@
+#!/bin/bash
+
+CONFLUENT_HOME="/engn/confluent"
+SERVER_NAME="{{ server_name }}"
+PROPERTIES_FILE="${CONFLUENT_HOME}/properties/schema-registry.properties"
+LOG_DIR="/log/schema-registry"
+
+
+SCHEMA_REGISTRY_HEAP_OPTS="${SCHEMA_REGISTRY_HEAP_OPTS} -Xms512M -Xmx512M"
+
+SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS="${SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS} -server"
+SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS="${SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS} -XX:MetaspaceSize=96m"
+SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS="${SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS} -XX:+UseG1GC"
+SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS="${SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS} -XX:MaxGCPauseMillis=20"
+SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS="${SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS} -XX:InitiatingHeapOccupancyPercent=35"
+SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS="${SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS} -XX:G1HeapRegionSize=16M"
+SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS="${SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS} -XX:MinMetaspaceFreeRatio=50"
+SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS="${SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS} -XX:MaxMetaspaceFreeRatio=80"
+
+
+SCHEMA_REGISTRY_OPTS="${SCHEMA_REGISTRY_OPTS} -D${SERVER_NAME}"
+
+export GC_LOG_ENABLED="true"
+
+export SCHEMA_REGISTRY_JMX_OPTS="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
+
+
+SCHEMA_REGISTRY_LOG4J_OPTS="${SCHEMA_REGISTRY_LOG4J_OPTS} -Dlog4j.configuration=file:${CONFLUENT_HOME}/properties/schema-registry-log4j.properties"
+export SCHEMA_REGISTRY_LOG4J_OPTS
+
+
+PID="$(pgrep -xa java | grep ${PROPERTIES_FILE} | grep ${SERVER_NAME} | awk '{print $1}')"
+
+if [ -n "${PID}" ]; then
+echo "[ERROR] The ${SERVER_NAME} (pid ${PID}) is already running!"
+
+if [ ! -d "${LOG_DIR}" ]; then
+
+nohup ${CONFLUENT_HOME}/bin/schema-registry-start ${PROPERTIES_FILE} 1>/dev/null 2>&1 & 
+
+echo Start $SERVER_NAME

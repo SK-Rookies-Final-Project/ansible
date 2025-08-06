@@ -22,8 +22,8 @@ export KAFKA_HEAP_OPTS="-Xms512m -Xmx1G"
 export KAFKA_JVM_PERFORMANCE_OPTS="-XX:+UseG1GC -XX:MaxGCPauseMillis=20"
 
 # JVM 시스템 프로퍼티 설정
-KAFKA_OPTS="${KAFKA_OPTS} -D${{server_name}}"
-KAFKA_OPTS="${KAFKA_OPTS} -D${{server_name}} -javaagent:/home/ubuntu/monitoring/jmx_prometheus_javaagent-0.20.0.jar=1236:/home/ubuntu/monitoring/kafka_connect.yml"
+KAFKA_OPTS="${KAFKA_OPTS} -D{{server_name}}"
+KAFKA_OPTS="${KAFKA_OPTS} -D{{server_name}} -javaagent:/home/ubuntu/monitoring/jmx_prometheus_javaagent-0.20.0.jar=1236:/home/ubuntu/monitoring/kafka_connect.yml"
 export KAFKA_OPTS
 
 # GC 로그 옵션 활성화
