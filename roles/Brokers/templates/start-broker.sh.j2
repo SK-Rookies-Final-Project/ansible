@@ -1,6 +1,7 @@
 #!/bin/bash
-CONFLUENT_HOME="/home/ubuntu/monitoring"
+CONFLUENT_HOME="/engn/confluent"
 SERVER_NAME={{ server_name }}
+
 PROPERTIES_FILE="${CONFLUENT_HOME}/properties/broker.properties"
 DATA_DIR="/data/broker"
 LOG_DIR="/log/broker"
@@ -51,6 +52,9 @@ export KAFKA_LOG4J_OPTS
  export AWS_ACCESS_KEY_ID="{{ aws_access_key_id }}"
  export AWS_SECRET_ACCESS_KEY="{{ aws_secret_access_key }}"
  #####################################################################
+
+## recieve signal from contoller
+  
  
  ## check current user
  CURRENT_USER="$(id -un)"

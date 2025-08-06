@@ -1,91 +1,86 @@
-# Kafka Connect 실행 스크립트를 저장할 디렉토리 생성
-- name: Create directory for sh
+- name: Create directory properties
   file:
-    path: /engn/confluent/scripts
+    path: /engn/confluent/properties/
     state: directory
     owner: ubuntu
     group: ubuntu
     mode: '0755'
     recurse: yes
 
-# Kafka Connect 시작 스크립트 복사
-- name: Copy Kafka Connect Start Script
-  copy:
-    src: start-connect.sh
-    dest: /engn/confluent/scripts/start-connect.sh
+- name: Deploy controller.properties.j2 to instance
+  template:
+    src: controller.properties.j2
+    dest: /engn/confluent/properties/controller.properties
     owner: ubuntu
     group: ubuntu
-    mode: '0755'
-  become: true
+    mode: '0644'
 
-# Kafka Connect 종료 스크립트 복사
-- name: Copy Kafka Connect Stop Script
-  copy:
-    src: stop-connect.sh
-    dest: /engn/confluent/scripts/stop-connect.sh
+- name: Deploy controller-log4j.properties.j2 to instance
+  template:
+    src: controller-log4j.properties.j2
+    dest: /engn/confluent/properties/controller-log4j.properties
     owner: ubuntu
     group: ubuntu
-    mode: '0755'
-  become: true
-  
+    mode: '0644'
 
-# Kafka Connect 환경변수 설정
-- name: Ensure CONFLUENT_HOME is present in ~/.bashrc
-  become: true
-  ansible.builtin.lineinfile:
-    path: ~/.bashrc
-    line: 'export CONFLUENT_HOME="/engn/confluent"'
-    state: present
-    create: yes
+- name: Check if Controller already formatted
+  stat:
+    path: /data/controller/meta.properties
+  register: controller_meta_exists
 
-- name: Source .bashrc for immediate use (only affects non-login shell)
-  shell: source ~/.bashrc
+- name: Format Controller storage with UUID (only if not already formatted)
+  shell: |
+    source /etc/profile.d/java.sh && \
+    /engn/confluent/bin/kafka-storage format \
+    -t {{ cluster_uuid }} \
+    -c /engn/confluent/properties/controller.properties
   args:
+    chdir: /engn/confluent/bin
     executable: /bin/bash
-  ignore_errors: yes  # 셸 프로세스에서 source는 별로 의미가 없어서 무시 처리
-
-
-
-# Kafka Connect 환경변수 설정
-- name: Ensure PROPERTIES_FILE is present in ~/.bashrc
+  when: cluster_uuid is defined and not controller_meta_exists.stat.exists
   become: true
-  ansible.builtin.lineinfile:
-    path: ~/.bashrc
-    line: 'export PROPERTIES_FILE="${CONFLUENT_HOME}/properties/connect-worker.properties"'
-    state: present
-    create: yes
 
-- name: Source .bashrc for immediate use (only affects non-login shell)
-  shell: source ~/.bashrc
-  args:
-    executable: /bin/bash
-  ignore_errors: yes  # 셸 프로세스에서 source는 별로 의미가 없어서 무시 처리
-
-
-# Kafka Connect 설정 파일 디렉토리 생성
-- name: Create directory for Kafka config files
+- name: Create directory scripts
   file:
-    path: /engn/confluent/properties
+    path: /engn/confluent/scripts/
     state: directory
     owner: ubuntu
     group: ubuntu
     mode: '0755'
     recurse: yes
 
-# Kafka Connect 설정 파일 배포
-- name: Deploy connect-worker.properties to instance
-  copy:
-    src: connect-worker.properties
-    dest: /engn/confluent/properties/connect-worker.properties
+- name: Create directory /data/controller
+  file:
+    path: /data/controller
+    state: directory
     owner: ubuntu
     group: ubuntu
-    mode: '0644'
+    mode: '0755'
+    recurse: yes
 
-# Kafka Connect 로그 설정 파일 템플릿 배포
-- name: Deploy connect-worker-log4j.properties to instance
-  copy:
-    src: connect-worker-log4j.properties
-    dest: /engn/confluent/properties/connect-worker-log4j.properties
+- name: Deploy start-controller.sh to instance
+  template:
+    src: start-controller.sh.j2
+    dest: /engn/confluent/scripts/start-controller.sh
     owner: ubuntu
     group: ubuntu
-    mode: '0644'
+    mode: '0755'
+
+- name: Deploy stop-controller.sh to instance
+  template:
+    src: stop-controller.sh.j2
+    dest: /engn/confluent/scripts/stop-controller.sh
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755' 
+
+# - name: Start Controller
+#   shell: /engn/confluent/scripts/start-controller.sh
+#   args:
+#     executable: /bin/bash
+#   become: true
+#   become_user: ubuntu
+#   register: result
+
+- debug:
+    var: result.stdout_lines

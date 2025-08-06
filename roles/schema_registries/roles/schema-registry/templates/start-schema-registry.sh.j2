@@ -1,0 +1,140 @@
+#!/bin/bash
+### var = "${var} variable" # var 변수에 variable 변수를 추가해서 var 변수에 대입해라
+# Schema Registry 실행 파일, 설정 파일 등이 들어있는 디렉토리 경로
+CONFLUENT_HOME="/engn/confluent"
+# Ansible 템플릿 변수: host_vars에 정의 된 server_name으로 대체됨
+SERVER_NAME="{{ server_name }}"
+# Schema Registry의 .properties 설정 파일의 경로
+PROPERTIES_FILE="${CONFLUENT_HOME}/properties/schema-registry.properties"
+# 로그 디렉토리 경로 지정 및 환경변수 등록
+LOG_DIR="/log/schema-registry"
+#### export: 자식 프로세스도 해당 경로 인식 가능 ####
+export LOG_DIR  # LOG_DIR 변수를 해당 스크립트에 적용하겠다
+
+### java home 
+export JAVA_HOME="/home/ubuntu/jdk-17.0.8+7" # 사용할 JDK 경로를 해당 스크립트에 적용하겠다
+
+######################################################################
+
+### memory options
+## JVM 메모리 구조
+## - Heap                : new 객체 저장
+## - Stack               : 지역 변수 저장
+## - Code Cache          : JIT 컴파일 된 바이트 코드
+## - Metaspace (!=Heap)  : 클래스 메타 데이터 저장
+
+# 초기 및 최대 heap memory 지정
+# - Xms: 초기 heap memory 크기
+# - Xmx: 최대 heap memory 크기
+SCHEMA_REGISTRY_HEAP_OPTS="${SCHEMA_REGISTRY_HEAP_OPTS} -Xms512M -Xmx512M"
+export SCHEMA_REGISTRY_HEAP_OPTS # 설정한 옵션들을 해당 스크립트에 적용하겠다
+
+### performance
+# SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS 변수에 JVM 옵션들을 하나씩 누적해서 추가하는 방식
+# SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS = "${SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS} -..."
+# - SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS에 값을 하나씩 누적해서 추가
+# server: 서버 모드 JVM 실행 (기본값보다 더 최적화)
+SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS="${SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS} -server"
+# XX:MetaspaceSize=96m: 클래스 메타데이터를 위한 초기 Metaspace 크기를 96m로 설정
+# Metaspace: JVM이 클래스 정보를 저장하는 메모리 공간
+SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS="${SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS} -XX:MetaspaceSize=96m"
+# XX:+UseG1GC: G1 Garbage Collector 사용
+# GC: Garbage Collector란
+# - Java 프로그램이 사용한 메모리 중 더 이상 필요 없는 객체를 자동으로 찾아 정리해주는 기능
+# G1: Garbage First란
+# - Heap을 region이라는 조각으로 나누고 필요한 곳만 GC해서 정지시간 최소화
+SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS="${SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS} -XX:+UseG1GC"
+# XX:MaxGCPauseMillis=20: GC 최대 일시 중지 시간 목표를 20ms로 설정
+SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS="${SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS} -XX:MaxGCPauseMillis=20"
+# XX:InitiatingHeapOccupancyPercent=35: G1 GC가 실행되는 임계치: heap의 35%가 찼을 때 시작
+SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS="${SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS} -XX:InitiatingHeapOccupancyPercent=35"
+# XX:G1HeapRegionSize=16M: G1 GC의 힙 영역(region) 크기를 16MB로 설정
+SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS="${SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS} -XX:G1HeapRegionSize=16M"
+# XX:MinMetaspaceFreeRatio=50, XX:MinMetaspaceFreeRatio=80: Metaspace 여유 비율을 50%~80%로 유지
+SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS="${SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS} -XX:MinMetaspaceFreeRatio=50"
+SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS="${SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS} -XX:MaxMetaspaceFreeRatio=80"
+export SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS # 설정한 옵션들을 해당 스크립트에 적용하겠다
+
+
+### generic jvm settings
+# SCHEMA_REGISTRY_OPTS에 서버 이름을 -D형식으로 추가
+SCHEMA_REGISTRY_OPTS="${SCHEMA_REGISTRY_OPTS} -D${SERVER_NAME}"
+# Prometheus에서 JXM exporter를 통해 메트릭 수집할 때 사용하는 설정(현재는 주석처리)
+# 모니터링을 원하면 주석 해제하기
+#SCHEMA_REGISTRY_OPTS="${SCHEMA_REGISTRY_OPTS} -javaagent:/monitoring/jmx_prometheus_javaagent0.20.0.jar=1237:/monitoring/confluent_schemaregistry.yml"
+export SCHEMA_REGISTRY_OPTS # 설정한 서버 이름을 이후 자식 프로세스에도 적용되도록 환경 변수로 등록
+
+### gc option
+# Garbage Collector 로그를 활성화하겠다
+export GC_LOG_ENABLED="true"
+
+### JMX: Java Management Extensions
+# JMX 포트를 직접 지정하려면 포트값을 넣어주면 됨
+# export JMX_PORT="" 
+# JMX를 통해 원격으로 JVM 상태를 모니터링하기 위한 설정
+# 인증 없이 SSL 없이 JMX를 활성화하겠다는 의미
+export SCHEMA_REGISTRY_JMX_OPTS="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
+
+
+### log4j
+# JVM에게 log4j 설정 파일 경로를 알려주는 옵션을 SCHEMA_REGISTRY_LOG4J_OPTS에 추가
+# 즉 로그 설정은 해당 경로에 있는 schema-registry-log4j.properties 파일을 따라가겠다는 뜻임
+SCHEMA_REGISTRY_LOG4J_OPTS="${SCHEMA_REGISTRY_LOG4J_OPTS} -Dlog4j.configuration=file:${CONFLUENT_HOME}/properties/schema-registry-log4j.properties"
+# 위 설정을 자식 프로세스(Schema Registry 실행 프로세스)에도 전달되게 함
+export SCHEMA_REGISTRY_LOG4J_OPTS
+
+### check current user
+# 현재 해당 스크립트를 실행하는 사용자의 유저명을 가져옴
+#CURRENT_USER="$(id -un)" # 현재는 주석 처리
+
+# 만약 사용자가 root라면 경고를 띄우고 스크립트 종료
+#if [ "${CURRENT_USER}" == "root" ]; then
+#echo "[ERROR] The current user is root!"
+#exit
+#fi
+
+### check running process
+# pgrep: 실행중인 프로세스 목록 중 조건에 맞는 프로세스의 PID를 찾아 줌
+#    -x: 프로세스 이름이 정확하게 java인것만 검색
+#    -a: PID 뿐 아니라 command line도 같이 출력
+# grep : 해당 결과 중 다시 명령중에 ${PROPERTIES_FILE}인 것만 골라냄
+#      : 즉 이 파일로 실행 된 프로세스만 필터링 하는 단계
+# grep : 위 결과 중 ${SERVER_NAME}이라는 문자열이 명령어에 포함 된 프로세스만 남김
+# awk  : 최종적으로 남은 줄에서 첫번째 필드만 출력
+#      : 첫 번째 필드는 바로 PID를 의미
+# PID="${ ... }": 괄호 안 명령어를 실행한 결과값을 PID변수에 저장
+#               : 즉 현재 Schema Registry가 이미 실행 중이면 해당 PID가 저장됨
+## 1. 실행중인 java 프로세스 중
+## 2. 설정 파일 경로가 들어간 것만 고르고
+## 3. 서버 이름도 들어가야 하고
+## 4. 그 PID만 뽑아내서
+## 5. 변수 PID에 저장함
+PID="$(pgrep -xa java | grep ${PROPERTIES_FILE} | grep ${SERVER_NAME} | awk '{print $1}')"
+
+# PID 변수가 비어있지 않다면(-n) (현재 실행중인 프로세스가 존재하면) 
+if [ -n "${PID}" ]; then
+# 에러 메세지 출력 후
+echo "[ERROR] The ${SERVER_NAME} (pid ${PID}) is already running!"
+exit # 스크립트 종료(이미 실행 중이므로 중복 실행 안되게 함)
+fi # if문을 끝내는 키워드
+
+### create log dir
+# ${LOG_DIR}이라는 디렉토리가 없다면
+if [ ! -d "${LOG_DIR}" ]; then
+mkdir -p ${LOG_DIR} # ${LOG_DIR}이라는 디렉토리를 만들어라
+fi # if문을 끝내는 키워드
+
+# nohup: no hang up의 줄임말
+#   터미널을 종료해도, 로그아웃 해도 프로세스가 백그라운드에서 계속 실행되게 해주는 명령어
+# ${CONFLUENT_HOME}/bin/schema-registry-start ${PROPERTIES_FILE}: 
+#   실제로 실행 할 Schema Registry 실행 명령어
+# 1>/dev/null: 정상 메세지(로그 등)는 보이지 않게 버려라 
+#   1>: 표준 출력(stdout)의 리디렉션
+#   /dev/null: 출력을 버리는 공간
+# 2>&1: 에러 메세지도 출력처럼 똑같이 버려라
+#   2>: 표준 에러(stderr)의 리디렉션
+#   &1: stdout과 같은 곳으로 보내라 
+# &: 명령어를 백그라운드에서 실행해라
+nohup ${CONFLUENT_HOME}/bin/schema-registry-start ${PROPERTIES_FILE} 1>/dev/null 2>&1 & 
+
+echo Start $SERVER_NAME

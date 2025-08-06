@@ -57,14 +57,6 @@
     dest: /engn/confluent/scripts/start-broker.sh
     mode: '0755'
 
-# - name: run start-broker.sh
-#   shell: /engn/confluent/scripts/start-broker.sh
-#   args:
-#     executable: /bin/bash
-#   become: true
-#   become_user: ubuntu
-#   register: result
-
 - name: Stop-Broker
   template:
     src: stop-broker.sh.j2

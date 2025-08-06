@@ -2,7 +2,7 @@
 
 set -x
 
-CONFLUENT_HOME="/home/ubuntu/monitoring"
+CONFLUENT_HOME="/engn/confluent"
 SERVER_NAME={{ server_name }} # !!!!!
 
 PROPERTIES_FILE="${CONFLUENT_HOME}/properties/controller.properties"
@@ -32,7 +32,7 @@ export KAFKA_JVM_PERFORMANCE_OPTS
 
 ### generic jvm settings ## 서버 이름 등 설정
 # KAFKA_OPTS=""
-KAFKA_OPTS="${KAFKA_OPTS} -D${SERVER_NAME} -javaagent:${CONFLUENT_HOME}/jmxexporter/jmx_prometheus_javaagent-0.20.0.jar=2346:${CONFLUENT_HOME}/jmx-exporter/kafka_broker.yml"
+KAFKA_OPTS="${KAFKA_OPTS} -D${SERVER_NAME} -javaagent:/home/ubuntu/monitoring/jmx_prometheus_javaagent-0.20.0.jar=2346:/home/ubuntu/monitoring/kafka_broker.yml"
 export KAFKA_OPTS
 
 ### gc option

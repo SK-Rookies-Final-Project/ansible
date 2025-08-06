@@ -1,58 +1,95 @@
-- name: Install Java on all nodes
-  hosts: all
-  become: true
-  roles:
-    - java_setup
+# - name: Install Java on all nodes
+#   hosts: all
+#   become: true
+#   roles:
+#     - java_setup
 
-- name: Generate Kafka Cluster UUID
-  hosts: Broker[0] 
+# - name: Generate Kafka Cluster UUID
+#   hosts: brokers[0]
+#   become: true
+#   tasks:
+#     - name: Generate Kafka Cluster UUID
+#       command: >
+#         bash -c 'source /etc/profile.d/java.sh && /engn/confluent/bin/kafka-storage random-uuid'
+#       register: uuid_result
+#       changed_when: false
+#       run_once: true
+
+#     - name: Set cluster_uuid to all nodes
+#       add_host:
+#         name: "{{ item }}"
+#         groups: all
+#         cluster_uuid: "{{ uuid_result.stdout }}"
+#       loop: "{{ groups['all'] }}"
+
+# - name: Setup Kafka Controllers
+#   hosts: controllers
+#   become: true
+#   roles:
+#     - controllers
+
+# - name: Setup Kafka Brokers
+#   hosts: brokers
+#   become: true
+#   roles:
+#     - brokers
+
+# - name: Setup CP1_Connect_Workers
+#   hosts: connect_workers
+#   become: true
+#   roles:
+#     - connect_workers
+#     - rds_setup
+#     - jmx_setup
+
+# - name: Setup CP1_Schema-Registries
+#   hosts: schma_registries
+#   become: true
+#   roles:
+#     - schema_registries
+
+# - name: Setup CP1_C3
+#   hosts: control_center
+#   become: true
+#   roles: 
+#     - controller_center
+
+# - name: Install Java on all nodes
+#   hosts: all
+#   become: true
+#   roles:
+#     - jmx_setup
+
+# - name: Run script
+#   hosts: controllers
+#   become: true
+#   become_user: ubuntu
+#   tasks:
+#     - name: Execute controller start script in background
+#       shell: nohup /engn/confluent/scripts/start-controller.sh > /dev/null 2>&1 &
+#       args:
+#         executable: /bin/bash
+#       register: result
+
+- name: Run script
+  hosts: brokers
   become: true
+  become_user: ubuntu
   tasks:
-    - name: Generate Kafka Cluster UUID
-      command: >
-        bash -c 'source /etc/profile.d/java.sh && /engn/confluent/bin/kafka-storage random-uuid'
-      register: uuid_result
-      changed_when: false
-      run_once: true
+    - name: Execute controller start script
+      shell: nohup /engn/confluent/scripts/start-broker.sh  > /dev/null 2>&1 &
+      args:
+        executable: /bin/bash
+      register: result
 
-    - name: Set cluster_uuid to all nodes
-      add_host:
-        name: "{{ item }}"
-        groups: all
-        cluster_uuid: "{{ uuid_result.stdout }}"
-      loop: "{{ groups['all'] }}"
+# - name: Run script
+#   hosts: brokers
+#   become: true
+#   become_user: ubuntu
+#   tasks:
+#     - name: Execute controller start script
+#       shell: /engn/confluent/scripts/start-broker.sh
+#       args:
+#         executable: /bin/bash
+#       register: result
 
-
-- name: Setup Kafka Controllers
-  hosts: Controllers
-  become: true
-  vars_files:
-    - secret.yml
-  roles:
-    - Controllers
-
-
-- name: Setup Kafka Brokers
-  hosts: Broker
-  become: true
-  vars_files:
-    - secret.yml
-  roles:
-    - Brokers
-
-
-- name: Setup Connect-Worker1
-  hosts: Connect-Worker1
-  become: true
-  roles:
-    - connect-worker1
-    - rds_setup
-    - jmx_setup
-
-- name: Setup Connect-Worker2
-  hosts: Connect-Worker2
-  become: true
-  roles:
-    - connect-worker2
-    - rds_setup
-    - jmx_setup

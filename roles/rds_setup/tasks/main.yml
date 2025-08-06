@@ -9,8 +9,8 @@
   become: true
 
 - name: Deploy JDBC MySQL Source Connector config
-  copy:
-    src: jdbc-mysql-source.json
+  :
+    src: jdbc-mysql-source.json.j2
     dest: /home/ubuntu/connector_test/jdbc-mysql-source.json
     owner: ubuntu
     group: ubuntu
@@ -19,8 +19,8 @@
 
 
 - name: Deploy JDBC postgeSQL Sink Connector config
-  copy:
-    src: jdbc-mysql-source.json
+  template:
+    src: jdbc-mysql-source.json.j2
     dest: /home/ubuntu/connector_test/jdbc-postgres-sink.json
     owner: ubuntu
     group: ubuntu

@@ -3,9 +3,6 @@
 # Kafka Confluent 설치 경로
 export CONFLUENT_HOME="/engn/confluent"
 
-# 서버 이름 (JVM 식별용)
-export SERVER_NAME="Connect-worker1"
-
 # Kafka Connect 설정 파일 경로
 export PROPERTIES_FILE="${CONFLUENT_HOME}/properties/connect-worker.properties"
 
@@ -25,8 +22,8 @@ export KAFKA_HEAP_OPTS="-Xms512m -Xmx1G"
 export KAFKA_JVM_PERFORMANCE_OPTS="-XX:+UseG1GC -XX:MaxGCPauseMillis=20"
 
 # JVM 시스템 프로퍼티 설정
-KAFKA_OPTS="${KAFKA_OPTS} -D${SERVER_NAME}"
-KAFKA_OPTS="${KAFKA_OPTS} -D${SERVER_NAME} -javaagent:/home/ubuntu/monitoring/jmx_prometheus_javaagent-0.20.0.jar=1236:/home/ubuntu/monitoring/kafka_connect.yml"
+KAFKA_OPTS="${KAFKA_OPTS} -D${{server_name}}"
+KAFKA_OPTS="${KAFKA_OPTS} -D${{server_name}} -javaagent:/home/ubuntu/monitoring/jmx_prometheus_javaagent-0.20.0.jar=1236:/home/ubuntu/monitoring/kafka_connect.yml"
 export KAFKA_OPTS
 
 # GC 로그 옵션 활성화
@@ -42,9 +39,9 @@ export KAFKA_LOG4J_OPTS="-Dlog4j.configuration=file:${CONFLUENT_HOME}/properties
 export CLASSPATH="${CLASSPATH}:${CONFLUENT_HOME}/share/java/kafka-connect-replicator/*"
 
 # 프로세스 중복 실행 방지
-PID="$(pgrep -xa java | grep ${PROPERTIES_FILE} | grep ${SERVER_NAME} | awk '{print $1}')"
+PID="$(pgrep -xa java | grep ${PROPERTIES_FILE} | grep ${{server_name}} | awk '{print $1}')"
 if [ -n "${PID}" ]; then
-  echo "[ERROR] ${SERVER_NAME} (pid ${PID}) is already running!"
+  echo "[ERROR] ${{server_name}} (pid ${PID}) is already running!"
   exit 1
 fi
 

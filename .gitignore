@@ -1,5 +1,5 @@
 # Secret vars
-secret.yml
+group_vars/*
 
 # SSH keys or credentials
 *.pem

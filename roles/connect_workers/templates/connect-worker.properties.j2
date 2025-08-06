@@ -1,5 +1,5 @@
 # Kafka 브로커 클러스터 주소 - Kafka Connect가 Kafka 클러스터에 접속하기 위해 사용
-bootstrap.servers=3.38.79.148:9092,3.36.230.37:9092,52.78.31.68:9092
+bootstrap.servers={{cp1_broker1_a_public_ip}}:9092,{{cp1_broker2_a_public_ip}}:9092,{{cp1_broker3_a_public_ip}}:9092
 # 시크릿(Secret) 설정을 위한 Config Provider의 카프카스토어 프로토콜 설정
 config.providers.secret.param.kafkastore.security.protocol=PLAINTEXT
 
@@ -18,9 +18,9 @@ confluent.monitoring.interceptor.topic=_confluent-monitoring
 connector.client.config.override.policy=All
 
 # 컨슈머가 사용할 Kafka 브로커 주소
-consumer.bootstrap.servers=3.38.79.148:9092,3.36.230.37:9092,52.78.31.68:9092
+consumer.bootstrap.servers={{cp1_broker1_a_public_ip}}:9092,{{cp1_broker2_a_public_ip}}:9092,{{cp1_broker3_a_public_ip}}:9092
 # 컨슈머용 Monitoring Interceptor가 사용할 브로커 주소
-consumer.confluent.monitoring.interceptor.bootstrap.servers=3.38.79.148:9092,3.36.230.37:9092,52.78.31.68:9092
+consumer.confluent.monitoring.interceptor.bootstrap.servers={{cp1_broker1_a_public_ip}}:9092,{{cp1_broker2_a_public_ip}}:9092,{{cp1_broker3_a_public_ip}}:9092
 # 컨슈머용 Monitoring Interceptor의 보안 프로토콜
 consumer.confluent.monitoring.interceptor.security.protocol=PLAINTEXT
 # 컨슈머 인터셉터 클래스 (모니터링용)
@@ -40,7 +40,7 @@ internal.value.converter.schemas.enable=false
 # 키 변환기에 Avro 변환기 사용 - 외부 데이터 변환시 사용
 key.converter=io.confluent.connect.avro.AvroConverter
 # 키 변환기에서 사용할 스키마 레지스트리 서버 주소(쉼표로 구분된 다중 엔드포인트)
-key.converter.schema.registry.url=15.164.71.109:8081,3.39.63.154:8081
+key.converter.schema.registry.url=http://{{cp1_sr1_a_public_ip}}:8081,http://{{cp1_sr2_a_public_ip}}:8081
 
 # Kafka Connect REST API 서버가 바인딩할 주소 - 워커 간 통신 및 REST API 제공
 listeners=http://0.0.0.0:8083
@@ -59,9 +59,9 @@ offset.storage.replication.factor=3
 plugin.path=/engn/confluent/share/java,/engn/confluent/share/confluent-hub-components
 
 # 프로듀서가 사용할 Kafka 브로커 주소
-producer.bootstrap.servers=3.38.79.148:9092,3.36.230.37:9092,52.78.31.68:9092
+producer.bootstrap.servers={{cp1_broker1_a_public_ip}}:9092,{{cp1_broker2_a_public_ip}}:9092,{{cp1_broker3_a_public_ip}}:9092
 # 프로듀서용 Monitoring Interceptor가 사용할 브로커 주소
-producer.confluent.monitoring.interceptor.bootstrap.servers=3.38.79.148:9092,3.36.230.37:9092,52.78.31.68:9092
+producer.confluent.monitoring.interceptor.bootstrap.servers={{cp1_broker1_a_public_ip}}:9092,{{cp1_broker2_a_public_ip}}:9092,{{cp1_broker3_a_public_ip}}:9092
 # 프로듀서용 Monitoring Interceptor의 보안 프로토콜
 producer.confluent.monitoring.interceptor.security.protocol=PLAINTEXT
 # 프로듀서 인터셉터 클래스 (모니터링용)
@@ -71,7 +71,7 @@ producer.security.protocol=PLAINTEXT
 
 # 외부에 노출될 REST API의 호스트 이름 및 포트 설정
 # 외부에서 접근 가능한 REST API 호스트 이름
-rest.advertised.host.name=43.203.234.46
+rest.advertised.host.name={{cp1_connect1_a_public_ip}}
 # 외부에서 접근 가능한 REST API 프로토콜
 rest.advertised.listener=http
 # 외부에서 접근 가능한 REST API 포트
@@ -96,7 +96,7 @@ status.storage.topic=kafka-connect-cluster-status
 # 값 변환기에 Avro 변환기 사용 - 외부 데이터 변환시 사용
 value.converter=io.confluent.connect.avro.AvroConverter
 # 값 변환기에서 사용할 스키마 레지스트리 서버 주소(쉼표로 구분된 다중 엔드포인트)
-value.converter.schema.registry.url=15.164.71.109:8081,3.39.63.154:8081
+value.converter.schema.registry.url=http://{{cp1_sr1_a_public_ip}}:8081,http://{{cp1_sr2_a_public_ip}}:8081
 
 # Config Provider 설정 - 외부 파일에서 설정값 불러오기
 config.providers=file

@@ -10,8 +10,8 @@
 
 # Kafka Connect 시작 스크립트 복사
 - name: Copy Kafka Connect Start Script
-  copy:
-    src: start-connect.sh
+  template:
+    src: start-connect.sh.j2
     dest: /engn/confluent/scripts/start-connect.sh
     owner: ubuntu
     group: ubuntu
@@ -74,8 +74,8 @@
 
 # Kafka Connect 설정 파일 배포
 - name: Deploy connect-worker.properties to instance
-  copy:
-    src: connect-worker.properties
+  template:
+    src: connect-worker.properties.j2
     dest: /engn/confluent/properties/connect-worker.properties
     owner: ubuntu
     group: ubuntu
