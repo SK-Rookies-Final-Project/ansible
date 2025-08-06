@@ -1,94 +1,91 @@
-# connector_test 디렉토리 생성
-- name: Create connector_test directory
-  file:
-    path: /home/ubuntu/connector_test
-    state: directory
-    owner: ubuntu
-    group: ubuntu
-    mode: '0755'
-  become: true
+# # Kafka Connect 실행 스크립트를 저장할 디렉토리 생성
+# - name: Create directory for sh
+#   file:
+#     path: /engn/confluent/scripts
+#     state: directory
+#     owner: ubuntu
+#     group: ubuntu
+#     mode: '0755'
+#     recurse: yes
 
-- name: Deploy JDBC MySQL Source Connector config
+# # Kafka Connect 시작 스크립트 복사
+# - name: Copy Kafka Connect Start Script
+#   copy:
+#     src: start-connect.sh
+#     dest: /engn/confluent/scripts/start-connect.sh
+#     owner: ubuntu
+#     group: ubuntu
+#     mode: '0755'
+#   become: true
+
+# # Kafka Connect 종료 스크립트 복사
+# - name: Copy Kafka Connect Stop Script
+#   copy:
+#     src: stop-connect.sh
+#     dest: /engn/confluent/scripts/stop-connect.sh
+#     owner: ubuntu
+#     group: ubuntu
+#     mode: '0755'
+#   become: true
+  
+
+# # Kafka Connect 환경변수 설정
+# - name: Ensure CONFLUENT_HOME is present in ~/.bashrc
+#   become: true
+#   ansible.builtin.lineinfile:
+#     path: ~/.bashrc
+#     line: 'export CONFLUENT_HOME="/engn/confluent"'
+#     state: present
+#     create: yes
+
+# - name: Source .bashrc for immediate use (only affects non-login shell)
+#   shell: source ~/.bashrc
+#   args:
+#     executable: /bin/bash
+#   ignore_errors: yes  # 셸 프로세스에서 source는 별로 의미가 없어서 무시 처리
+
+
+
+# # Kafka Connect 환경변수 설정
+# - name: Ensure PROPERTIES_FILE is present in ~/.bashrc
+#   become: true
+#   ansible.builtin.lineinfile:
+#     path: ~/.bashrc
+#     line: 'export PROPERTIES_FILE="${CONFLUENT_HOME}/properties/connect-worker.properties"'
+#     state: present
+#     create: yes
+
+# - name: Source .bashrc for immediate use (only affects non-login shell)
+#   shell: source ~/.bashrc
+#   args:
+#     executable: /bin/bash
+#   ignore_errors: yes  # 셸 프로세스에서 source는 별로 의미가 없어서 무시 처리
+
+
+# # Kafka Connect 설정 파일 디렉토리 생성
+# - name: Create directory for Kafka config files
+#   file:
+#     path: /engn/confluent/properties
+#     state: directory
+#     owner: ubuntu
+#     group: ubuntu
+#     mode: '0755'
+#     recurse: yes
+
+# Kafka Connect 설정 파일 배포
+- name: Deploy connect-worker.properties to instance
   copy:
-    src: jdbc-mysql-source.json
-    dest: /home/ubuntu/connector_test/jdbc-mysql-source.json
+    src: connect-worker.properties
+    dest: /engn/confluent/properties/connect-worker.properties
     owner: ubuntu
     group: ubuntu
     mode: '0644'
-  become: true
 
-
-- name: Deploy JDBC postgeSQL Sink Connector config
-  copy:
-    src: jdbc-mysql-source.json
-    dest: /home/ubuntu/connector_test/jdbc-postgres-sink.json
-    owner: ubuntu
-    group: ubuntu
-    mode: '0644'
-  become: true
-
-# 커넥터 등록용 쉘 스크립트 복사
-- name: Copy create-connector.sh script to remote host
-  copy:
-    src: create-connector.sh
-    dest: /engn/confluent/scripts/create-connector.sh
-    owner: ubuntu
-    group: ubuntu
-    mode: '0755'
-  become: true
-
-
-
-# Kafka JDBC Connector 설치 (Confluent Hub CLI 사용)
-- name: Install Kafka Connect JDBC connector using Confluent CLI
-  shell: ./confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:latest
-  args:
-    chdir: /engn/confluent/bin
-    creates: /engn/confluent/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
-  become: true
-
-# MySQL JDBC 드라이버 다운로드 (wget 사용)
-- name: Download MySQL JDBC Driver using wget
-  shell: |
-    wget -O /tmp/mysql-connector.deb https://downloads.mysql.com/archives/get/p/3/file/mysql-connector-j_8.4.0-1ubuntu24.04_all.deb
-  args:
-    creates: /tmp/mysql-connector.deb
-  become: true
-
-# MySQL JDBC 드라이버 설치 (.deb 패키지 설치)
-- name: Install JDBC Driver
-  apt:
-    deb: /tmp/mysql-connector.deb
-  become: true
-
-# JDBC .jar 파일 존재 여부 확인
-- name: Ensure JDBC jar file exists
-  stat:
-    path: /usr/share/java/mysql-connector-j-8.4.0.jar
-  register: jdbc_jar
-
-# JDBC .jar 파일을 Kafka Connect의 lib 디렉토리로 복사
-- name: Copy JDBC jar to Kafka Connect lib path
-  copy:
-    src: /usr/share/java/mysql-connector-j-8.4.0.jar
-    dest: /engn/confluent/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mysql-connector-j-8.4.0.jar
-    remote_src: yes
-  when: jdbc_jar.stat.exists
-  become: true
-
-# MySQL 클라이언트 설치
-- name: Install MySQL client core 8.0
-  apt:
-    name: mysql-client-core-8.0
-    state: present
-    update_cache: yes
-  become: true
-
-# PostgreSQL 클라이언트 설치
-- name: Install PostgreSQL client
-  apt:
-    name: postgresql-client
-    state: present
-    update_cache: yes
-  become: true
-
+# # Kafka Connect 로그 설정 파일 템플릿 배포
+# - name: Deploy connect-worker-log4j.properties to instance
+#   copy:
+#     src: connect-worker-log4j.properties
+#     dest: /engn/confluent/properties/connect-worker-log4j.properties
+#     owner: ubuntu
+#     group: ubuntu
+#     mode: '0644'

@@ -1,58 +1,58 @@
-- name: Install Java on all nodes
-  hosts: all
-  become: true
-  roles:
-    - java_setup
+# - name: Install Java on all nodes
+#   hosts: all
+#   become: true
+#   roles:
+#     - java_setup
 
-- name: Generate Kafka Cluster UUID
-  hosts: Broker[0] 
-  become: true
-  tasks:
-    - name: Generate Kafka Cluster UUID
-      command: >
-        bash -c 'source /etc/profile.d/java.sh && /engn/confluent/bin/kafka-storage random-uuid'
-      register: uuid_result
-      changed_when: false
-      run_once: true
+# - name: Generate Kafka Cluster UUID
+#   hosts: Broker[0] 
+#   become: true
+#   tasks:
+#     - name: Generate Kafka Cluster UUID
+#       command: >
+#         bash -c 'source /etc/profile.d/java.sh && /engn/confluent/bin/kafka-storage random-uuid'
+#       register: uuid_result
+#       changed_when: false
+#       run_once: true
 
-    - name: Set cluster_uuid to all nodes
-      add_host:
-        name: "{{ item }}"
-        groups: all
-        cluster_uuid: "{{ uuid_result.stdout }}"
-      loop: "{{ groups['all'] }}"
-
-
-- name: Setup Kafka Controllers
-  hosts: Controllers
-  become: true
-  vars_files:
-    - secret.yml
-  roles:
-    - Controllers
+#     - name: Set cluster_uuid to all nodes
+#       add_host:
+#         name: "{{ item }}"
+#         groups: all
+#         cluster_uuid: "{{ uuid_result.stdout }}"
+#       loop: "{{ groups['all'] }}"
 
 
-- name: Setup Kafka Brokers
-  hosts: Broker
-  become: true
-  vars_files:
-    - secret.yml
-  roles:
-    - Brokers
+# - name: Setup Kafka Controllers
+#   hosts: Controllers
+#   become: true
+#   vars_files:
+#     - secret.yml
+#   roles:
+#     - Controllers
+
+
+# - name: Setup Kafka Brokers
+#   hosts: Broker
+#   become: true
+#   vars_files:
+#     - secret.yml
+#   roles:
+#     - Brokers
 
 
 - name: Setup Connect-Worker1
   hosts: Connect-Worker1
   become: true
   roles:
-    - connect-worker1
-    - rds_setup
-    - jmx_setup
+    - connect_worker1
+    # - rds_setup
+    # - jmx_setup
 
 - name: Setup Connect-Worker2
   hosts: Connect-Worker2
   become: true
   roles:
-    - connect-worker2
-    - rds_setup
-    - jmx_setup
+    - connect_worker2
+    #- rds_setup
+    # - jmx_setup
