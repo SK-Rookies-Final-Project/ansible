@@ -1,6 +1,6 @@
 advertised.listeners=PLAINTEXT://{{ public_ip }}:9092
 auto.create.topics.enable=true
-broker.id={{ node_id }}
+node.id={{ node_id }}
 
 confluent.balancer.disk.max.load=0.85
 confluent.balancer.enable=true
@@ -27,7 +27,7 @@ confluent.schema.registry.url=http://{{cp1_sr1_a_public_ip}}:8081,http://{{cp1_s
 confluent.tier.enable=false
 controller.listener.names=CONTROLLER
 # controller.quorum.voters=i-0990e3ae7400674a0@ip-10-0-14-3.ap-northeast-2.compute.internal:9093,i-0c831c05ce83411c7@ip-10-0-6-220.ap-northeast-2.compute.internal:9093,i-069dc4060fe9a9c16@ip-10-0-2-192.ap-northeast-2.compute.internal:9093
-controller.quorum.voters=101@{{cp1_controller1_a_public_ip}}:9093,102@{{cp1_controller2_a_public_ip}}:9093,103@{{cp1_controller3_a_public_ip}}:9093
+controller.quorum.voters=101@{{cp1_controller1_a_private_ip}}:9093,102@{{cp1_controller2_a_private_ip}}:9093,103@{{cp1_controller3_a_private_ip}}:9093
 
 default.replication.factor=3
 inter.broker.listener.name=PLAINTEXT

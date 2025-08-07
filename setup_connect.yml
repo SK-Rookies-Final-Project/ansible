@@ -4,66 +4,66 @@
 #   roles:
 #     - java_setup
 
-# - name: Generate Kafka Cluster UUID
-#   hosts: brokers[0]
-#   become: true
-#   tasks:
-#     - name: Generate Kafka Cluster UUID
-#       command: >
-#         bash -c 'source /etc/profile.d/java.sh && /engn/confluent/bin/kafka-storage random-uuid'
-#       register: uuid_result
-#       changed_when: false
-#       run_once: true
+- name: Generate Kafka Cluster UUID
+  hosts: brokers[0]
+  become: true
+  tasks:
+    - name: Generate Kafka Cluster UUID
+      command: >
+        bash -c 'source /etc/profile.d/java.sh && /engn/confluent/bin/kafka-storage random-uuid'
+      register: uuid_result
+      changed_when: false
+      run_once: true
 
-#     - name: Set cluster_uuid to all nodes
-#       add_host:
-#         name: "{{ item }}"
-#         groups: all
-#         cluster_uuid: "{{ uuid_result.stdout }}"
-#       loop: "{{ groups['all'] }}"
+    - name: Set cluster_uuid to all nodes
+      add_host:
+        name: "{{ item }}"
+        groups: all
+        cluster_uuid: "{{ uuid_result.stdout }}"
+      loop: "{{ groups['all'] }}"
 
-# # 권한 설정 추가
-# - name: Setup Kafka Data Directories
-#   hosts: all
-#   become: true
-#   tasks:
-#     - name: Create Kafka data directories
-#       file:
-#         path: "{{ item }}"
-#         state: directory
-#         owner: ubuntu
-#         group: ubuntu
-#         mode: '0755'
-#         recurse: yes
-#       loop:
-#         - /data/broker
-#         - /data/controller
-#         - /engn/confluent/logs
+# 권한 설정 추가
+- name: Setup Kafka Data Directories
+  hosts: all
+  become: true
+  tasks:
+    - name: Create Kafka data directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: '0755'
+        recurse: yes
+      loop:
+        - /data/broker
+        - /data/controller
+        - /engn/confluent/logs
 
-# - name: Setup Kafka Controllers
-#   hosts: controllers
-#   become: true
-#   roles:
-#     - controllers
+- name: Setup Kafka Controllers
+  hosts: controllers
+  become: true
+  roles:
+    - controllers
 
-# - name: Setup Kafka Brokers
-#   hosts: brokers
-#   become: true
-#   roles:
-#     - brokers
+- name: Setup Kafka Brokers
+  hosts: brokers
+  become: true
+  roles:
+    - brokers
 
-# - name: Setup CP1_Connect_Workers
-#   hosts: connect_workers
-#   become: true
-#   roles:
-#     - connect_workers
-#     - rds_setup
+- name: Setup CP1_Connect_Workers
+  hosts: connect_workers
+  become: true
+  roles:
+    - connect_workers
+    - rds_setup
 
-# - name: Setup CP1_Schema-Registries
-#   hosts: schema_registries
-#   become: true
-#   roles:
-#     - schema_registries
+- name: Setup CP1_Schema-Registries
+  hosts: schema_registries
+  become: true
+  roles:
+    - schema_registries
 
 - name: Setup CP1_C3
   hosts: control_center
@@ -71,55 +71,55 @@
   roles: 
     - controller_center
 
-# - name: Install Java on all nodes
-#   hosts: all
-#   become: true
-#   roles:
+- name: Install Java on all nodes
+  hosts: all
+  become: true
+  roles:
 #     - jmx_setup
 
-# - name: Start Kafka Controllers
-#   hosts: controllers
-#   become: true
-#   become_user: ubuntu  # ubuntu 사용자로 실행
-#   tasks:
-#     - name: Execute controller start script in background
-#       shell: nohup /engn/confluent/scripts/start-controller.sh > /dev/null 2>&1 &
-#       args:
-#         executable: /bin/bash  # bash 쉘로 실행
-#       register: result         # 실행 결과를 변수에 저장
+- name: Start Kafka Controllers
+  hosts: controllers
+  become: true
+  become_user: ubuntu  # ubuntu 사용자로 실행
+  tasks:
+    - name: Execute controller start script in background
+      shell: nohup /engn/confluent/scripts/start-controller.sh > /dev/null 2>&1 &
+      args:
+        executable: /bin/bash  # bash 쉘로 실행
+      register: result         # 실행 결과를 변수에 저장
 
-# - name: Start Kafka Brokers
-#   hosts: brokers
-#   become: true
-#   become_user: ubuntu  # ubuntu 사용자로 실행
-#   tasks:
-#     - name: Execute broker start script in background
-#       shell: nohup /engn/confluent/scripts/start-broker.sh > /dev/null 2>&1 &
-#       args:
-#         executable: /bin/bash  # bash 쉘로 실행
-#       register: result         # 실행 결과를 변수에 저장
+- name: Start Kafka Brokers
+  hosts: brokers
+  become: true
+  become_user: ubuntu  # ubuntu 사용자로 실행
+  tasks:
+    - name: Execute broker start script in background
+      shell: nohup /engn/confluent/scripts/start-broker.sh > /dev/null 2>&1 &
+      args:
+        executable: /bin/bash  # bash 쉘로 실행
+      register: result         # 실행 결과를 변수에 저장
 
-# - name: Start Kafka Schema-Registries
-#   hosts: schema_registries
-#   become: true
-#   become_user: ubuntu  # ubuntu 사용자로 실행
-#   tasks:
-#     - name: Execute schema-registry start script in background
-#       shell: nohup /engn/confluent/scripts/start-schema-registry.sh > /dev/null 2>&1 &
-#       args:
-#         executable: /bin/bash  # bash 쉘로 실행
-#       register: result         # 실행 결과를 변수에 저장
+- name: Start Kafka Schema-Registries
+  hosts: schema_registries
+  become: true
+  become_user: ubuntu  # ubuntu 사용자로 실행
+  tasks:
+    - name: Execute schema-registry start script in background
+      shell: nohup /engn/confluent/scripts/start-schema-registry.sh > /dev/null 2>&1 &
+      args:
+        executable: /bin/bash  # bash 쉘로 실행
+      register: result         # 실행 결과를 변수에 저장
 
-# - name: Start Kafka Connect-Workers
-#   hosts: connect_workers
-#   become: true
-#   become_user: ubuntu  # ubuntu 사용자로 실행
-#   tasks:
-#     - name: Execute connect-worker start script in background
-#       shell: nohup /engn/confluent/scripts/start-connect.sh > /dev/null 2>&1 &
-#       args:
-#         executable: /bin/bash  # bash 쉘로 실행
-#       register: result         # 실행 결과를 변수에 저장
+- name: Start Kafka Connect-Workers
+  hosts: connect_workers
+  become: true
+  become_user: ubuntu  # ubuntu 사용자로 실행
+  tasks:
+    - name: Execute connect-worker start script in background
+      shell: nohup /engn/confluent/scripts/start-connect.sh > /dev/null 2>&1 &
+      args:
+        executable: /bin/bash  # bash 쉘로 실행
+      register: result         # 실행 결과를 변수에 저장
 
 - name: Start Kafka Control-Center
   hosts: control_center

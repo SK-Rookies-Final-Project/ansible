@@ -24,8 +24,7 @@ export CONTROL_CENTER_OPTS
 ### gc option
 export GC_LOG_ENABLED="true"
 ### JMX 설정
-export KAFKA_JMX_OPTS="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
-export CONTROL_CENTER_JMX_OPTS
+export CONTROL_CENTER_JMX_OPTS="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
 ### log4j
 CONTROL_CENTER_LOG4J_OPTS="${CONTROL_CENTER_LOG4J_OPTS} -Dlog4j.configuration=file:${CONFLUENT_HOME}/properties/control-center-log4j.properties"
 export CONTROL_CENTER_LOG4J_OPTS

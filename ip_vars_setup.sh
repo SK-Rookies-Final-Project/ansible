@@ -50,7 +50,7 @@ EOF
         local var_name=$(echo "$name" | tr '[:upper:]' '[:lower:]' | tr -cd '[:alnum:]_' | sed 's/^[0-9]/_&/')
         
         # Handle missing IPs
-        [[ "$public_ip" == "None" ]] && public_ip=""
+        [[ "$ip" == "None" ]] && public_ip=""
         [[ "$private_ip" == "None" ]] && private_ip=""
         
         # Append to file
@@ -231,6 +231,7 @@ update_host_vars() {
 ---
 # Auto-generated host variables for $name
 # Generated at: $(date '+%Y-%m-%d %H:%M:%S')
+# controller를 위해서 aws_access_key_id와 aws_secret_access_key를 추가해주세요
 
 server_name: "$name"
 public_ip: "$public_ip"

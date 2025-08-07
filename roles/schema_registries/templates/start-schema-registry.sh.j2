@@ -1,13 +1,28 @@
 #!/bin/bash
 
+# =============================================================================
+# Schema Registry 시작 스크립트
+# =============================================================================
+
+# 기본 설정
 CONFLUENT_HOME="/engn/confluent"
-SERVER_NAME="{{ server_name }}"
+SERVER_NAME={{server_name}}
 PROPERTIES_FILE="${CONFLUENT_HOME}/properties/schema-registry.properties"
 LOG_DIR="/log/schema-registry"
+export LOG_DIR
 
+# Java Home 설정
+export JAVA_HOME="/home/ubuntu/jdk-17.0.2"
 
+# =============================================================================
+# JVM 옵션 설정
+# =============================================================================
+
+# 메모리 설정
 SCHEMA_REGISTRY_HEAP_OPTS="${SCHEMA_REGISTRY_HEAP_OPTS} -Xms512M -Xmx512M"
+export SCHEMA_REGISTRY_HEAP_OPTS
 
+# 성능 최적화 설정
 SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS="${SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS} -server"
 SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS="${SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS} -XX:MetaspaceSize=96m"
 SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS="${SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS} -XX:+UseG1GC"
@@ -16,26 +31,52 @@ SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS="${SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS} -X
 SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS="${SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS} -XX:G1HeapRegionSize=16M"
 SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS="${SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS} -XX:MinMetaspaceFreeRatio=50"
 SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS="${SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS} -XX:MaxMetaspaceFreeRatio=80"
+export SCHEMA_REGISTRY_JVM_PERFORMANCE_OPTS
 
-
+# 일반적인 JVM 설정
 SCHEMA_REGISTRY_OPTS="${SCHEMA_REGISTRY_OPTS} -D${SERVER_NAME}"
+#SCHEMA_REGISTRY_OPTS="${SCHEMA_REGISTRY_OPTS} -javaagent:/monitoring/jmx_prometheus_javaagent-0.20.0.jar=1237:/monitoring/confluent_schemaregistry.yml"
+export SCHEMA_REGISTRY_OPTS
 
+# GC 로그 설정
 export GC_LOG_ENABLED="true"
 
-export SCHEMA_REGISTRY_JMX_OPTS="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
+# JMX 설정
+# export JMX_PORT=""
+SCHEMA_REGISTRY_JMX_OPTS="${SCHEMA_REGISTRY_JMX_OPTS} -Dcom.sun.management.jmxremote"
+SCHEMA_REGISTRY_JMX_OPTS="${SCHEMA_REGISTRY_JMX_OPTS} -Dcom.sun.management.jmxremote.authenticate=false"
+SCHEMA_REGISTRY_JMX_OPTS="${SCHEMA_REGISTRY_JMX_OPTS} -Dcom.sun.management.jmxremote.ssl=false"
+export SCHEMA_REGISTRY_JMX_OPTS
 
-
+# Log4j 설정
 SCHEMA_REGISTRY_LOG4J_OPTS="${SCHEMA_REGISTRY_LOG4J_OPTS} -Dlog4j.configuration=file:${CONFLUENT_HOME}/properties/schema-registry-log4j.properties"
 export SCHEMA_REGISTRY_LOG4J_OPTS
 
+# =============================================================================
+# 실행 전 검증
+# =============================================================================
 
+# 현재 사용자 확인 (주석 처리됨)
+#CURRENT_USER="$(id -un)"
+#if [ "${CURRENT_USER}" == "root" ]; then
+#    echo "[ERROR] The current user is root!"
+#    exit
+#fi
+
+# 실행 중인 프로세스 확인
 PID="$(pgrep -xa java | grep ${PROPERTIES_FILE} | grep ${SERVER_NAME} | awk '{print $1}')"
-
 if [ -n "${PID}" ]; then
-echo "[ERROR] The ${SERVER_NAME} (pid ${PID}) is already running!"
+    echo "[ERROR] The ${SERVER_NAME} (pid ${PID}) is already running!"
+    exit
+fi
 
+# 로그 디렉토리 생성
 if [ ! -d "${LOG_DIR}" ]; then
+    mkdir -p ${LOG_DIR}
+fi
 
-nohup ${CONFLUENT_HOME}/bin/schema-registry-start ${PROPERTIES_FILE} 1>/dev/null 2>&1 & 
+# =============================================================================
+# Schema Registry 시작
+# =============================================================================
 
-echo Start $SERVER_NAME
+nohup ${CONFLUENT_HOME}/bin/schema-registry-start ${PROPERTIES_FILE} 1>/dev/null 2>&1 &

@@ -34,7 +34,7 @@ confluent.tier.enable=false
 controller.listener.names=CONTROLLER
 # !! 여기 바꿔주기 !!
 #controller.quorum.voters=i-00f45de4df93f754a@ip-10-0-1-98.ap-northeast-2.compute.internal:9093,i-068cc95fb9c65e1e7@ip-10-0-1-45.ap-northeast-2.compute.internal:9093,i-0354f3f291195f81b@ip-10-0-1-214.ap-northeast-2.compute.internal:9093
-controller.quorum.voters=101@{{cp1_controller1_a_public_ip}}:9093,102@{{cp1_controller2_a_public_ip}}:9093,103@{{cp1_controller3_a_public_ip}}:9093
+controller.quorum.voters=101@{{cp1_controller1_a_private_ip}}:9093,102@{{cp1_controller2_a_private_ip}}:9093,103@{{cp1_controller3_a_private_ip}}:9093
 #controller.quorum.voters=101@172.31.36.19:9093
 # 1번controllerID@1번controller_PrivateDNS:9093, 2번controllerID@2번controller_PrivateDNS:9093, 3번controllerID@3번 controller_PrivateDNS:9093
 
